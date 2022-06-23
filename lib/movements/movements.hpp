@@ -7,13 +7,11 @@ namespace MovementsLeo
 {
     class Movements
     {
-        void esxR();
+        private:
 
-        void esxL();
-
-        void eszU();
-
-        void eszD();
+        public:
+            Movements();
+            ~Movements();
     };
     #endif //MOVEMENTS_H
 }
