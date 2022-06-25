@@ -19,11 +19,8 @@ class MotorController
     private:
         DriverPins _pins;
 
-    // sensor reading
-        // TODO: interrupts
-        void es_interrupts();
-
-    //responses to readings (ISRs)
+        void calc_freq();
+        void calc_num_pulses();
         
 
     public:
@@ -33,5 +30,7 @@ class MotorController
 
         void change_en_state();
         void change_dir_state();
+
+        
 };
 #endif // HARDWARE_W
