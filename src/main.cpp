@@ -1,7 +1,10 @@
 #include <Arduino.h>
 #include "motorcontroller.hpp"
 
-const int ENX = 13, DIRX = 12, STEPX = 11, ENZ = 8, DIRZ = 9, STEPZ = 10, ESX1 = 18, ESX2 = 19, ESZ1 = 20, ESZ2 = 21, OUTX = 22;
+const int ENX = 13, DIRX = 12, STEPX = 11, ENZ = 8, DIRZ = 9, STEPZ = 10, ESX1 = 18, ESX2 = 19, ESZ1 = 20, ESZ2 = 21, OUTX = 22, OUTZ = 23;
+
+DriverPins driver_x_pins = {ESX1, ESX2, DIRX, ENX, STEPX, OUTX};
+// DriverPins driver_z_pins = {ESZ1, ESZ2, DIRZ, ENZ, STEPZ, OUTZ};
 
 // TODO: move to movements lib
 /*
@@ -47,42 +50,33 @@ void routine(float x_speed, float y_speed)
 */
 
 // ISRs
+MotorController eixo_x(driver_x_pins);
+// MotorController eixo_z(driver_z_pins);
 
-void es_1()
+void es_x()
 {
-    digitalWrite(ENX, LOW);
+    // digitalWrite(ENX, LOW);
+    eixo_x.change_en_state();
+    eixo_x.change_dir_state();
 }
-void es_2()
-{
-    digitalWrite(ENX, LOW);
-}
+// void es_z()
+// {
+//     // digitalWrite(ENX, LOW);
+//     eixo_z.change_en_state();
+    // eixo_z.change_dir_state();
+// }
 
 void setup ()
 {
-    // pinMode(ENX, OUTPUT);
-    // pinMode(DIRX, OUTPUT);
-    // pinMode(STEPX, OUTPUT);
-    // pinMode(ENZ, OUTPUT);
-    // pinMode(DIRZ, OUTPUT);
-    // pinMode(STEPZ, OUTPUT);
-    // pinMode(ESX1, INPUT_PULLUP);
-    // pinMode(ESX2, INPUT_PULLUP);
-    // pinMode(ESZ1, INPUT_PULLUP);
-    // pinMode(ESZ2, INPUT_PULLUP);
-    // attachInterrupt(digitalPinToInterrupt(ESX1), esxR, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(ESX2), esxL, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(ESZ1), eszU, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(ESZ2), eszD, FALLING);
     Serial.begin(9600);
-    // using namespace HardwareLeo;
-    MotorController eixo_x = MotorController();
-    eixo_x.setEsPins(ESX1, ESX2);
-    eixo_x.setDriPins(DIRX, ENX, STEPX, OUTX);
 
-    attachInterrupt(digitalPinToInterrupt(ESX1), es_1, FALLING);
-    attachInterrupt(digitalPinToInterrupt(ESX2), es_2, FALLING);
-    eixo_x.change_dir_state();
     eixo_x.change_en_state();
+    // eixo_z.change_en_state();
+
+    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES1), es_x, FALLING);
+    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES2), es_x, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES1), es_z, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES2), es_z, FALLING);
 
 }
 
