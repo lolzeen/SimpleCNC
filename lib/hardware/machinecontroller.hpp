@@ -1,11 +1,12 @@
-#ifndef PARAMETERS_H
-#define PARAMETERS_H
+#ifndef MACHINECONTROLLER_H
+#define MACHINECONTROLLER_H
 
 #include <Arduino.h>
+#include "motorcontroller.hpp"
 
-namespace ParametersLeo
+namespace HardwareLeo
 {
-    class Parameters
+    class MachineController
     // Define process parameters and execute movements
     {
     private:
@@ -27,9 +28,9 @@ namespace ParametersLeo
 
     public:
         
-        Parameters(int pin_x_r, int pin_x_l, int pin_z_u, int pin_z_d);
-        Parameters();
-        ~Parameters();
+        // MachineController(int pin_x_r, int pin_x_l, int pin_z_u, int pin_z_d);
+        MachineController();
+        ~MachineController();
         
         
         // TODO: get user input in respect to desired speed ~routine parameters~
@@ -41,4 +42,4 @@ namespace ParametersLeo
     
     
 } // ParametersLeo
-#endif // PARAMETERS_H
+#endif // MACHINECONTROLLER_H

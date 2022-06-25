@@ -3,25 +3,14 @@
 
 #include <Arduino.h>
 
-namespace HardwareLeo
-{
-    struct IoPins 
-    {
-        IoPins()
-        {
-            // default I/Os
-            const int ENX = 11, DIRX = 12, STEPX = 13, ENZ = 8, DIRZ = 9, STEPZ = 10, ESX1 = 18, ESX2 = 19, ESZ1 = 20, ESZ2 = 21;
-        }
-        // IMPROVEMENT: alternative constructor
-    }io_pins;
-
-    class Controller
+// namespace HardwareLeo
+// {
+    class MotorController
     {
         private:
             struct EsPin
             // End Siwtch Pins
             {
-                EsPin();
                 int pin_1 = 0;
                 int pin_2 = 0;
             }es_inp;
@@ -37,18 +26,24 @@ namespace HardwareLeo
 
         // sensor reading
             // TODO: interrupts
+            void es_interrupts();
 
         //responses to readings (ISRs)
-            void es_1();
-            void es_2();
+            
 
         public:
-            Controller();
-            ~Controller();
+            MotorController();
+            ~MotorController();
 
             void setEsPins(int pin_1, int pin_2);
             void setDriPins(int pin_dir, int pin_enable, int pin_step, int pin_output);
 
+            static void es_1();
+            static void es_2();
+
+            void change_en_state();
+            void change_dir_state();
+
     };
-} // HardwareLeo
+// } // HardwareLeo
 #endif //HARDWARE_W
