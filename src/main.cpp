@@ -67,7 +67,7 @@ void isr_x1()
 
 void setup ()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     eixo_x.change_en_state();
     // eixo_z.change_en_state();
@@ -75,7 +75,7 @@ void setup ()
     attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES1), isr_x1, FALLING);
     attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES2), isr_x1, FALLING);
 
-    
+
     // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES1), isr_z, FALLING);
     // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES2), isr_z, FALLING);
 
