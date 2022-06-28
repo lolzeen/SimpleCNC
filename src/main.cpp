@@ -49,19 +49,18 @@ void routine(float x_speed, float y_speed)
 }
 */
 
-// ISRs
+
 MotorController eixo_x(driver_x_pins);
 // MotorController eixo_z(driver_z_pins);
 
-void es_x()
+// ISRs
+void isr_x1()
 {
-    // digitalWrite(ENX, LOW);
     eixo_x.change_en_state();
     eixo_x.change_dir_state();
 }
-// void es_z()
+// void isr_z()
 // {
-//     // digitalWrite(ENX, LOW);
 //     eixo_z.change_en_state();
     // eixo_z.change_dir_state();
 // }
@@ -73,10 +72,12 @@ void setup ()
     eixo_x.change_en_state();
     // eixo_z.change_en_state();
 
-    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES1), es_x, FALLING);
-    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES2), es_x, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES1), es_z, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES2), es_z, FALLING);
+    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES1), isr_x1, FALLING);
+    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES2), isr_x1, FALLING);
+
+    
+    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES1), isr_z, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES2), isr_z, FALLING);
 
 }
 
