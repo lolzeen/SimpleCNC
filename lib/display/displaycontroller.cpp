@@ -1,13 +1,17 @@
 #include "displaycontroller.hpp"
 
-DisplayController::DisplayController()
+
+
+DisplayController::DisplayController() : LiquidCrystal(rs, en, d4, d5, d6, d7)
 {
-    DisplayController::display_pins = {13,12,12,10,9,8};
+    
 }
-DisplayController::DisplayController(const DisplayPins& pins)
-{
-    DisplayController::display_pins = pins;
-}
+
+// DisplayController::DisplayController(DisplayPins display_pins)
+// {
+//     const 
+// }
+
 DisplayController::~DisplayController()
 {
     // intentionally empty
@@ -15,7 +19,7 @@ DisplayController::~DisplayController()
 
 void DisplayController::show_main_menu()
 {
-    lc
+    
 }
 
 void DisplayController::show_speed_menu()

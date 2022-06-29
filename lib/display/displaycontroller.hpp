@@ -14,16 +14,17 @@ struct DisplayPins
     uint8_t d7;
 };
 
-
-class DisplayController
+class DisplayController : public LiquidCrystal
 {
     private:
-        DisplayPins display_pins;
-        // TODO unpack display_pins on lcd conctructor
-        LiquidCrystal lcd(display_pins.rs, display_pins.enable, display_pins.d4, display_pins.d5,display_pins.d6, display_pins.d7);
+        
+        
     public:
+        const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+        // DisplayController(LiquidCrystal& liquidcrystal);
         DisplayController();
-        DisplayController(const DisplayPins& pins);
+        // TODO unpack display_pins on lcd conctructor
+        // DisplayController(DisplayPins display_pins);
         ~DisplayController();
 
         void show_main_menu();
