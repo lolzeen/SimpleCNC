@@ -1,119 +1,128 @@
 #include "UserInterface.hpp"
 
-Debounce::Debounce()
-{
-
-}
-Debounce::Debounce(const InputPins& pins)
-{
-    
-}
-Debounce::~Debounce()
-{
-    
-}
-
-bool Debounce::read_input()
-{
-    int reading = digitalRead(pin);
-
-    if (reading != last_state)
-    {
-    // reset the debouncing timer
-    lastDebounceTime = millis();
-    }
-    if ((millis() - lastDebounceTime) > debounceDelay)
-    {
-    // whatever the reading is at, it's been there for longer than the debounce
-    // delay, so take it as the actual current state:
-
-        // if the button state has changed:
-        if (reading != Debounce::state)
-        {
-            Debounce::state = reading;
-            return Debounce::state;   
-        }
-    }
-}
-
 UserInterface::UserInterface()
 {
-    
+    // intentionally empty
 }
-
-UserInterface::UserInterface(const InputPins& pins)
+UserInterface::UserInterface(const InputPins& in_pins, const DisplayPins& disp_pins)
 {
-    UserInterface::input_pins = pins;
-    pinMode(UserInterface::input_pins.button_1, INPUT);
-    pinMode(UserInterface::input_pins.button_2, INPUT);
+    _input_pins = in_pins;
+    _display_pins = disp_pins;
+    pinMode(_input_pins.button_1, INPUT);
+    pinMode(_input_pins.button_2, INPUT);
+    _button_change = Debounce(_input_pins.button_1);
+    _button_select = Debounce(_input_pins.button_2);
 }
-
 UserInterface::~UserInterface()
 {
+    // intentionally empty
 }
 
-// TODO: update second row according to get_pot_input
-void UserInterface::display_menu(LiquidCrystal& _lcd)
+void UserInterface::set_menu_content()
 {
-    switch (UserInterface::current_window)
+    while (!_button_select.read_input())
+    {
+        /* problema: como atualizar o menu enquanto o potenciometro é alterado.
+        Nao consigo copiar uma instancia de lcd da main e tambem nao consigo herdar a classe liquid crystal.
+        */
+        int new_reading = map(analogRead(A0), 0, 1053, 5, 100);
+        if (new_reading != _pot_value)
+        {
+            _pot_value = new_reading;
+            content_menus[_current_window][_cursor_position] = _pot_value;
+            display_menu();
+        }
+    }
+
+}
+void UserInterface::get_button_input(const int& button)
+{
+    switch (button)
+    {
+    // button change
+    case 1:
+        if (!_button_change.read_input())
+        {
+            Serial.println("Button Change Pressed");
+            if (_current_window == 0 && _cursor_position == 0)
+            {
+                _cursor_position = 1;
+            }
+            else if (_current_window < _num_windows - 1)
+            {
+                _current_window += 1;
+
+            }
+            // else if (_current_window == _num_windows -1)
+            else
+            {
+                _current_window = 0;
+                _cursor_position = 0;
+            }
+            display_menu();
+        }
+        
+        break;
+    // button select
+    case 2:
+        if (!_button_change.read_input())
+        {
+            Serial.println("Button Select Pressed");
+            set_menu_content();
+        }
+        break;
+    default:
+        break;
+    }
+}
+int UserInterface::get_current_window()
+{
+    return _current_window;
+}
+void UserInterface::set_current_window(int new_window)
+{
+    _current_window = new_window;
+}
+uint8_t UserInterface::get_cursor_position()
+{
+    return _cursor_position;
+}
+void UserInterface::set_cursor_position(uint8_t new_cur_pos)
+{
+    _cursor_position = new_cur_pos;
+}
+void UserInterface::display_menu()
+{
+    switch (get_current_window())
     {   
     case 1:
         _lcd.clear();
-        _lcd.print(UserInterface::content_menus[1][0]);
+        _lcd.print(content_menus[1][0]);
         _lcd.setCursor(0, 1);
-        _lcd.print(UserInterface::content_menus[1][1]);
+        _lcd.print(content_menus[1][1]);
         break;
-    
     case 2:
         _lcd.clear();
-        _lcd.print(UserInterface::content_menus[2][0]);
+        _lcd.print(content_menus[2][0]);
         _lcd.setCursor(0, 1);
-        _lcd.print(UserInterface::content_menus[2][1]);
+        _lcd.print(content_menus[2][1]);
         break;
-    
     default:
         _lcd.clear();
-        _lcd.print(UserInterface::content_menus[0][0]);
+        _lcd.print(content_menus[0][0]);
         _lcd.setCursor(0, 1);
-        _lcd.print(UserInterface::content_menus[0][1]);
-        UserInterface::current_window = 0;
+        _lcd.print(content_menus[0][1]);
+        set_current_window(0);
         break;
     }
+    Serial.println("Display Updated");
 }
-
-uint8_t UserInterface::get_current_window() const
+void UserInterface::initialize_display()
 {
-    return UserInterface::current_window;
+    _lcd.begin(16,2);
+    _lcd.clear();
+    _lcd.print("     LASIN");
+    delay(1000);
+    Serial.println("Display initialized");
+    display_menu();
 }
-
-void UserInterface::adjust_item()
-{
-    // TODO: define condition
-    // while ()
-    // {
-    //     int value = map(analogRead(A0), 0, 1053, 5, 100);
-        
-    // }
-}
-
-//TODO: finish function
-void UserInterface::get_button_input()
-{
-    // implement debounce
-    // adpat the following
-    // if (button_state_1 == HIGH)
-    // {
-    //     current_menu = current_menu + 1;
-    //     interface.display_menu(lcd, current_menu);
-    //     Serial.println(current_menu);
-    // }
-    // last_state_button_1 = reading1;
-}
-
-/*
-int UserInterface::get_pot_input()
-{
-    return analogRead(A0);
-}
-*/
-
