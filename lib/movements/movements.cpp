@@ -22,4 +22,22 @@ namespace MovementsLeo
         digitalWrite(ENZ, HIGH);
         digitalWrite(DIRZ, LOW);
     }
+    void returnHome()
+    {
+        if (ax != 1)
+        {
+            moveLeft();
+            // call speed function set to high
+        }
+        if (az != 1)
+        {
+            
+            // call speed function set to high
+        }
+    }
+
+    void routine(float x_speed, float y_speed)
+    {
+        // execute routine acording to desired speeds
+    }
 }
