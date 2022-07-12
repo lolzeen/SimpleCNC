@@ -1,10 +1,15 @@
 #ifndef HARDWARE_W
 #define HARDWARE_W
 
-const int CLOSE = 0;
-const int FAR = 1;
-
 #include <Arduino.h>
+#include "Movements.hpp"
+
+const uint8_t HOME = 0;
+const uint8_t FINISH = 1;
+const uint8_t FORWARD = 0;
+const uint8_t BACKWARD = 1;
+const uint8_t MAX_DISTANCE = 34;
+const double MIN_TIME = 0.5;
 
 struct DriverPins
 {
@@ -47,9 +52,10 @@ class MotorController
 
         // IMPROVEMENT void set_dist_unit(char* dist_unit);
         // IMPROVEMENT void set_time_unit(char* time_unit);
-        void calc_freq();
-        void calc_num_pulses();
+        float calc_freq();
+        uint64_t calc_num_pulses();
         void io_setup(const DriverPins &pins);
+        void process_setup();
         // IMPROVEMENT: write settings on memory before turning off
         
 
@@ -70,17 +76,9 @@ class MotorController
 
         const ProcessParameters get_process_params();
 
-        // uint8_t _last_pos;
-        // uint8_t _dir_state;
-        // uint8_t _en_state;
-        // float _frequency;
-        // uint64_t _num_pulses;
-        // float _distance; // cm
-        // float _time; // min
-        // float _speed; // cm/min
-
         void change_en_state();
         void change_dir_state();
+        void return_home();
 
         // IMPROVEMENT void set_units(char* dist_unit, char* time_unit);
     

@@ -4,19 +4,6 @@ UserInterface::UserInterface()
 {
     // intentionally empty
 }
-// UserInterface::UserInterface(const InputPins& in_pins, const DisplayPins& disp_pins, const DriverPins& driv_pins_x, const DriverPins& driv_pins_z)
-// {
-//     _input_pins = in_pins;
-//     _display_pins = disp_pins;
-//     _driver_x_pins = driv_pins_x;
-//     _driver_z_pins = driv_pins_z;
-    
-//     _button_change = Debounce(_input_pins.button_1);
-//     _button_select = Debounce(_input_pins.button_2);
-//     _axis_x = MotorController(_driver_x_pins);
-//     _axis_z = MotorController(_driver_z_pins);
-
-// }
 UserInterface::UserInterface(const InputPins& in_pins)
 {
     _button_change.begin(in_pins.button_1);
@@ -27,7 +14,6 @@ UserInterface::~UserInterface()
 {
     // intentionally empty
 }
-
 void UserInterface::get_pot_input()
 {
     int new_reading = analogRead(_pot_pin);

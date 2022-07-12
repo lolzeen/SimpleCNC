@@ -59,35 +59,6 @@ void DisplayController::initialize_display()
 void DisplayController::set_menu_content(float content)
 {
     _content_menus[get_current_window()][1] = content;
+    _content_menus[get_current_window()][1] += " cm/min";
     display_menu();
 }
-// void UserInterface::get_button_input()
-// {
-//     if (_button_select.debounce())
-//     {
-//         Serial.println("Button Select Pressed");
-//         if (_current_window == 0)
-//         {
-//             initialize_process = true;
-//         }
-//         else if (_current_window > 0)
-//         {
-//             set_menu_content();
-//         }   
-//     }
-//     if (_button_change.read_input())
-//     {
-//         Serial.println("Button Change Pressed");
-//         if (_current_window < _num_windows - 1)
-//         {
-//             _current_window += 1;
-
-//         }
-//         // else if (_current_window == _num_windows -1)
-//         else
-//         {
-//             _current_window = 0;
-//         }
-//         display_menu();
-//     }
-// }

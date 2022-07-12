@@ -9,11 +9,13 @@ MotorController::MotorController(const DriverPins &pins)
 {
     io_setup(pins);
     _driver_params =  {27500};
+    process_setup();
 }
 MotorController::MotorController(const DriverPins &pins, const DriverParameters &params_driver)
 {
     io_setup(pins);
     _driver_params = params_driver;
+    process_setup();
 }
 MotorController::~MotorController()
 {
@@ -31,8 +33,25 @@ void MotorController::io_setup(const DriverPins &pins)
     pinMode(_driver_pins._OUT, INPUT);
     Serial.println("Driver Pins are set!");
 }
+void MotorController::process_setup()
+{
+    set_last_pos(HOME);
+    set_dir_state(FORWARD);
+    set_en_state(LOW);
+    set_distance(MAX_DISTANCE);
+    set_time(MIN_TIME);
+    set_speed(MAX_DISTANCE/MIN_TIME);
+    set_freq(calc_freq());
+    set_num_pulses(calc_num_pulses());
+    // TODO: call return home
+}
+void MotorController::return_home()
+{
+    TODO:
+}
 void MotorController::change_dir_state()
 {
+    // TODO: substitute this digital read for a software verification
     if (digitalRead(_driver_pins._DIR))
     {
         digitalWrite(_driver_pins._DIR, LOW);
@@ -44,6 +63,7 @@ void MotorController::change_dir_state()
 }
 void MotorController::change_en_state()
 {
+    // TODO: substitute this digital read for a software verification
     if (digitalRead(_driver_pins._EN))
     {
         digitalWrite(_driver_pins._EN, LOW);
@@ -53,12 +73,13 @@ void MotorController::change_en_state()
         digitalWrite(_driver_pins._EN, HIGH);
     }
 }
-void MotorController::calc_num_pulses()
+uint64_t MotorController::calc_num_pulses()
 {
     _process_params._num_pulses = _driver_params._pulses_per_rev * _process_params._distance;
 }
-void MotorController::calc_freq()
+float MotorController::calc_freq()
 {
+    // TODO:  calc based on speed
     _process_params._frequency = _process_params._distance / (_process_params._time * 60);
 }
 void MotorController::set_last_pos(const uint8_t pos)
@@ -91,18 +112,12 @@ void MotorController::set_time(const uint8_t time)
 }
 void MotorController::set_speed(const uint8_t speed)
 {
-    _process_params._speed;
+    _process_params._speed = speed;
 }
 const ProcessParameters MotorController::get_process_params()
 {
     return _process_params;
 }
-
-// FIXME: calculate frequency based on the selected speed (user input)
-// void calc_freq()
-// {
-//     process_params._frequency = process_params._speed / 60;
-// }
 
 /* IMPROVEMENT
 void set_units(char* dist_unit, char* time_unit)
