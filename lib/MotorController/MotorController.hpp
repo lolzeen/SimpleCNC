@@ -6,10 +6,10 @@
 
 const uint8_t HOME = 0;
 const uint8_t FINISH = 1;
-const uint8_t FORWARD = 0;
-const uint8_t BACKWARD = 1;
-const uint8_t MAX_DISTANCE = 34;
-const double MIN_TIME = 0.5;
+const uint8_t FORWARD = 0; // TODO: confirm this with driver 
+const uint8_t BACKWARD = 1; // TODO: confirm this with driver 
+const uint8_t MAX_DISTANCE = 34; // cm // TODO: confirm this with CAD model
+const double MIN_TIME = 0.5; // minutes // TODO: confirm this with CAD model
 
 struct DriverPins
 {
@@ -56,7 +56,6 @@ class MotorController
         uint64_t calc_num_pulses();
         void io_setup(const DriverPins &pins);
         void process_setup();
-        // IMPROVEMENT: write settings on memory before turning off
         
 
     public:
@@ -77,8 +76,13 @@ class MotorController
         const ProcessParameters get_process_params();
 
         void change_en_state();
+        void change_en_state(uint8_t state);
         void change_dir_state();
+        void change_dir_state(uint8_t state);
         void return_home();
+        // TODO: set position to FINISH when es_2 is triggered
+        // TODO: set position to HOME when es_1 is triggered
+        void set_pos(uint8_t pos); // TODO: find better name for this function
 
         // IMPROVEMENT void set_units(char* dist_unit, char* time_unit);
     

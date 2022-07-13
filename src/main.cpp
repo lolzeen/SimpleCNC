@@ -37,22 +37,28 @@ DisplayController display;
 /* ----- ISRs ----- */
 void isr_x1()
 {
-    eixo_x.change_en_state();
-    eixo_x.change_dir_state();
+    eixo_x.set_pos(HOME);
 }
-// void isr_z()
+void isr_x2()
+{
+    eixo_x.set_pos(FINISH);
+}
+// void isr_z1()
 // {
-//     eixo_z.change_en_state();
-//     eixo_z.change_dir_state();
+//     eixo_x.set_pos(HOME);
+// }
+// void isr_z2()
+// {
+//     eixo_x.set_pos(FINISH);
 // }
 
 void setup ()
 {
     Serial.begin(9600);
     attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES1), isr_x1, FALLING);
-    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES2), isr_x1, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES1), isr_z, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES2), isr_z, FALLING);
+    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES2), isr_x2, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES1), isr_z1, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES2), isr_z2, FALLING);
     eixo_x.set_distance(30);
     // eixo_z.set_distance(30);
     
@@ -77,6 +83,10 @@ void loop ()
     }
     if (interface.get_init_process())
     {
+        // while pos < max_dist
+        // send x step signal
+        // delay
+        // send y step signal
         // todo: calculate time based on speed
         // todo: verify if all process parameters are denifed
         // todo: start routine

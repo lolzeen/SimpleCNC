@@ -20,6 +20,7 @@ MotorController::MotorController(const DriverPins &pins, const DriverParameters 
 MotorController::~MotorController()
 {
     // Intentionally Empty;
+    // IMPROVEMENT: write settings on memory before turning off
 }
 void MotorController::io_setup(const DriverPins &pins)
 {
@@ -36,8 +37,8 @@ void MotorController::io_setup(const DriverPins &pins)
 void MotorController::process_setup()
 {
     set_last_pos(HOME);
-    set_dir_state(FORWARD);
-    set_en_state(LOW);
+    change_dir_state(FORWARD);
+    change_en_state(LOW);
     set_distance(MAX_DISTANCE);
     set_time(MIN_TIME);
     set_speed(MAX_DISTANCE/MIN_TIME);
@@ -51,27 +52,39 @@ void MotorController::return_home()
 }
 void MotorController::change_dir_state()
 {
-    // TODO: substitute this digital read for a software verification
-    if (digitalRead(_driver_pins._DIR))
+    if (_process_params._dir_state)
     {
-        digitalWrite(_driver_pins._DIR, LOW);
+        digitalWrite(_driver_pins._DIR, FORWARD);
+        set_dir_state(FORWARD);
     }
     else
     {
-        digitalWrite(_driver_pins._DIR, HIGH);
+        digitalWrite(_driver_pins._DIR, BACKWARD);
+        set_dir_state(BACKWARD);
     }
+}
+void MotorController::change_dir_state(uint8_t state)
+{
+    digitalWrite(_driver_pins._DIR, state);
+    set_dir_state(state);
 }
 void MotorController::change_en_state()
 {
-    // TODO: substitute this digital read for a software verification
-    if (digitalRead(_driver_pins._EN))
+    if (_process_params._en_state)
     {
         digitalWrite(_driver_pins._EN, LOW);
+        set_en_state(LOW);
     }
     else
     {
         digitalWrite(_driver_pins._EN, HIGH);
+        set_en_state(HIGH);
     }
+}
+void MotorController::change_en_state(uint8_t state)
+{
+    digitalWrite(_driver_pins._EN, state);
+    set_en_state(state);
 }
 uint64_t MotorController::calc_num_pulses()
 {
@@ -118,7 +131,11 @@ const ProcessParameters MotorController::get_process_params()
 {
     return _process_params;
 }
-
+void MotorController::set_pos(uint8_t pos)
+{
+    change_en_state(LOW);
+    set_last_pos(pos);
+}
 /* IMPROVEMENT
 void set_units(char* dist_unit, char* time_unit)
 {

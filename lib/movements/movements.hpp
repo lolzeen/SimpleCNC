@@ -12,6 +12,8 @@ namespace MovementsLeo
         public:
             Movements();
             ~Movements();
+        // TODO: moveLeft etc... (already on cpp)
+        // TODO: void freq_generator();
     };
     #endif //MOVEMENTS_H
 }
