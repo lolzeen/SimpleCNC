@@ -32,7 +32,7 @@ void DisplayController::display_menu()
         set_current_window(0);
         break;
     }
-    Serial.println("Display Updated");
+    // Serial.println("Display Updated");
 }
 void DisplayController::set_current_window(uint8_t new_window)
 {
@@ -52,13 +52,18 @@ void DisplayController::initialize_display()
     _lcd.begin(16,2);
     _lcd.clear();
     // _lcd.print("     LASIN");
-    Serial.println("Display initialized");
+    // Serial.println("Display initialized");
     set_current_window(0);
     display_menu();
 }
-void DisplayController::set_menu_content(float content)
+void DisplayController::set_menu_content(long content)
 {
+    _feed_speed = content;
     _content_menus[get_current_window()][1] = content;
     _content_menus[get_current_window()][1] += " cm/min";
     display_menu();
+}
+long DisplayController::get_feed_speed()
+{
+    return _feed_speed;
 }

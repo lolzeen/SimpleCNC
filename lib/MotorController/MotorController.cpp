@@ -8,7 +8,7 @@ MotorController::MotorController()
 MotorController::MotorController(const DriverPins &pins)
 {
     io_setup(pins);
-    _driver_params =  {27500};
+    _driver_params =  {20000};
     process_setup();
 }
 MotorController::MotorController(const DriverPins &pins, const DriverParameters &params_driver)
@@ -42,13 +42,14 @@ void MotorController::process_setup()
     set_distance(MAX_DISTANCE);
     set_time(MIN_TIME);
     set_speed(MAX_DISTANCE/MIN_TIME);
-    set_freq(calc_freq());
-    set_num_pulses(calc_num_pulses());
+    // the functions below do not have acess to the data they need
+    // FIXME set_freq(calc_freq());
+    // FIXME set_num_pulses(calc_num_pulses());
     // TODO: call return home
 }
 void MotorController::return_home()
 {
-    TODO:
+    // TODO:
 }
 void MotorController::change_dir_state()
 {
@@ -89,11 +90,13 @@ void MotorController::change_en_state(uint8_t state)
 uint64_t MotorController::calc_num_pulses()
 {
     _process_params._num_pulses = _driver_params._pulses_per_rev * _process_params._distance;
+    return _process_params._num_pulses;
 }
 float MotorController::calc_freq()
 {
     // TODO:  calc based on speed
-    _process_params._frequency = _process_params._distance / (_process_params._time * 60);
+    // _process_params._frequency = _process_params._distance / (_process_params._time * 60);
+    // _process_params._frequency = 
 }
 void MotorController::set_last_pos(const uint8_t pos)
 {
@@ -196,4 +199,3 @@ void set_dist_unit(char* dist_unit)
     }
 }
 */
-

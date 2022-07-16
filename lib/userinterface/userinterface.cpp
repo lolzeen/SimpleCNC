@@ -31,14 +31,18 @@ void UserInterface::get_pot_input()
 }
 void UserInterface::get_button_input()
 {
-    if (_button_select.debounce() && _change_menu == false)
+    if (_button_select.debounce())
     {
-        Serial.println("Button Select Pressed");
-        set_change_menu(true);  
-    }
-    else if (_button_select.debounce() && _change_menu == true)
-    {
-        set_change_menu(false);
+        if (_change_menu == false)
+        {
+            Serial.println("Button Select Pressed: Start Editing");
+            set_change_menu(true);
+        }
+        else
+        {
+            Serial.println("Button Select Pressed: End Editing");
+            set_change_menu(false);
+        }
     }
     if (_button_change.debounce())
     {

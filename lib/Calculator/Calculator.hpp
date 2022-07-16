@@ -2,13 +2,14 @@
 #define CALCULATOR_H
 
 #include <Arduino.h>
+#include "MotorController.hpp"
 
 float map_float(int x, int in_min, int in_max, long out_min, long out_max);
 
-
-float conv_pot_speed(int pot_reading);
-        // IMPROVEMENT: static float conv_pot_time(int pot_reading);
-        // IMPROVEMENT: static float conv_pot_distance(int pot_reading);
+long conv_pot_speed(int pot_reading);
+long calc_freq(long speed, DriverParameters params);
+// IMPROVEMENT: static float conv_pot_time(int pot_reading);
+// IMPROVEMENT: static float conv_pot_distance(int pot_reading);
 
 
 

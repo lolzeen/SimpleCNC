@@ -52,16 +52,18 @@ class DisplayController
         void set_current_window(uint8_t new_window);
 
         String _content_menus[3][2] = {{"Iniciar Processo", "Ajustes ->"}, {"Vel. Avanco", "cm/min"}, {"Vel. Mergulho", "cm/min"}};
-
+        uint16_t _feed_speed; // TODO fix nam
+        // uint16_t dive_speed;
         void display_menu();
         
     public:
         DisplayController();
         ~DisplayController();
         int get_current_window();
+        // uint8_t get_dive_speed();
+        long get_feed_speed(); // TODO fix name
 
-        void set_menu_content(float content);
-
+        void set_menu_content(long content);
         void next_window();
         void initialize_display();
 };

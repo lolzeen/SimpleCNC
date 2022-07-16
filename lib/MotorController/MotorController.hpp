@@ -64,6 +64,8 @@ class MotorController
         MotorController(const DriverPins &pins,  const DriverParameters &params_driver);
         ~MotorController();
 
+        bool move = false;
+
         void set_last_pos(const uint8_t pos);
         void set_dir_state(const uint8_t state);
         void set_en_state(const uint8_t  state);
@@ -80,8 +82,6 @@ class MotorController
         void change_dir_state();
         void change_dir_state(uint8_t state);
         void return_home();
-        // TODO: set position to FINISH when es_2 is triggered
-        // TODO: set position to HOME when es_1 is triggered
         void set_pos(uint8_t pos); // TODO: find better name for this function
 
         // IMPROVEMENT void set_units(char* dist_unit, char* time_unit);
