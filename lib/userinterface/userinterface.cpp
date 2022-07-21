@@ -66,6 +66,10 @@ void UserInterface::set_init_process(const bool var)
 {
     _init_process = var;
 }
+void UserInterface::set_return_home(const bool var)
+{
+    _return_home = var;
+}
 const bool UserInterface::get_change_menu()
 {
     return _change_menu;
@@ -82,7 +86,12 @@ const bool UserInterface::get_init_process()
 {
     return _init_process;
 }
+const bool UserInterface::get_return_home()
+{
+    return _return_home;
+}
 const int UserInterface::get_pot_value()
 {
     return _pot_value;
 }
+

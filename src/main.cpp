@@ -26,7 +26,7 @@ const uint8_t potentiometer = A0;
 InputPins input_pins = {button_change, button_select, potentiometer};
 
 /* ---- Driver Parameters ----- */
-const DriverParameters driver_params = {20000};
+const DriverParameters driver_params = {15000};
 
 MotorController eixo_x(driver_x_pins, driver_params);
 // MotorController eixo_z(driver_z_pins, driver_params);
@@ -43,6 +43,7 @@ void isr_x1()
     noTone(driver_x_pins._STEP);
     eixo_x.set_pos(HOME);
     interface.set_init_process(false);
+    interface.set_return_home(false);
 }
 void isr_x2()
 {
@@ -52,7 +53,7 @@ void isr_x2()
     // eixo_x.move = false;
     eixo_x.set_pos(FINISH);
     interface.set_init_process(false);
-    Serial.println("interrupt");
+    interface.set_return_home(false);
 }
 // void isr_z1()
 // {
@@ -77,7 +78,6 @@ void setup ()
 
 void loop ()
 {
-    Serial.println(".");
     interface.get_button_input();
     if (interface.get_change_window())
     {
@@ -91,34 +91,45 @@ void loop ()
             interface.set_init_process(true);
             interface.set_change_menu(false);
         }
-        else
+        else if (display.get_current_window() == 1)
+        {
+            interface.set_return_home(true);
+            interface.set_change_menu(false);
+        }
+        else if (display.get_current_window() == 2)
         {
             interface.get_pot_input();
             if (interface.get_adjust_menu())
             {
-                display.set_menu_content(conv_pot_speed(interface.get_pot_value()));
+                display.set_feed_speed(conv_pot_speed(interface.get_pot_value()));
+            }
+            interface.get_button_input();
+        }
+        else if (display.get_current_window() == 3)
+        {
+            interface.get_pot_input();
+            if (interface.get_adjust_menu())
+            {
+                display.set_dive_speed(conv_pot_speed(interface.get_pot_value()));
             }
             interface.get_button_input();
         }
     }
     if (interface.get_init_process())
     {
-        Serial.println("Processsing!");
-        eixo_x.set_freq(calc_freq(display.get_feed_speed(), driver_params));
-        eixo_x.set_en_state(true);
-        digitalWrite(driver_x_pins._EN, HIGH);
+        Serial.print("Display Speed:");
+        Serial.println(display.get_feed_speed());
+        Serial.println(calc_freq(display.get_feed_speed(), driver_params._pulses_per_rev));
+        eixo_x.set_freq(calc_freq(display.get_feed_speed(), driver_params._pulses_per_rev));
+        eixo_x.start_process();
+        // eixo_x.set_en_state(true);
+        // digitalWrite(driver_x_pins._EN, HIGH);
         // eixo_x.move = true;
-        tone(driver_x_pins._STEP, eixo_x.get_process_params()._frequency);
-
-    //     // while pos < max_dist
-    //     // todo: verify if all process parameters are denifed
-    //     // todo: start routine
-    //     // todo: return home when both buttons are pressed
-    //     // while (eixo_x.move)
-    //     // {
-    //     //     analogWrite(3, 20);
-    //     // }
+        // tone(driver_x_pins._STEP, eixo_x.get_process_params()._frequency);
     }
-    // delay(200);
+    if (interface.get_return_home())
+    {
+        eixo_x.return_home();
+    }
 }
 

@@ -29,7 +29,7 @@ struct ProcessParameters
     uint8_t _last_pos;
     uint8_t _dir_state;
     uint8_t _en_state;
-    float _frequency;
+    long _frequency;
     uint64_t _num_pulses;
     float _distance; // cm
     float _time; // min
@@ -52,7 +52,7 @@ class MotorController
 
         // IMPROVEMENT void set_dist_unit(char* dist_unit);
         // IMPROVEMENT void set_time_unit(char* time_unit);
-        float calc_freq();
+        // float calc_freq();
         uint64_t calc_num_pulses();
         void io_setup(const DriverPins &pins);
         void process_setup();
@@ -69,7 +69,7 @@ class MotorController
         void set_last_pos(const uint8_t pos);
         void set_dir_state(const uint8_t state);
         void set_en_state(const uint8_t  state);
-        void set_freq(const uint8_t freq);
+        void set_freq(const long freq);
         void set_num_pulses(const uint64_t num);
         void set_distance(const uint8_t dist);
         void set_time(const uint8_t time);
@@ -82,6 +82,7 @@ class MotorController
         void change_dir_state();
         void change_dir_state(uint8_t state);
         void return_home();
+        void start_process();
         void set_pos(uint8_t pos); // TODO: find better name for this function
 
         // IMPROVEMENT void set_units(char* dist_unit, char* time_unit);

@@ -36,6 +36,7 @@ void MotorController::io_setup(const DriverPins &pins)
 }
 void MotorController::process_setup()
 {
+    // TODO: review usability probably start_process is more usefull
     set_last_pos(HOME);
     change_dir_state(FORWARD);
     change_en_state(LOW);
@@ -47,9 +48,20 @@ void MotorController::process_setup()
     // FIXME set_num_pulses(calc_num_pulses());
     // TODO: call return home
 }
+void MotorController::start_process()
+{
+    change_dir_state(FORWARD);
+    change_en_state(HIGH);
+    Serial.print("Freq: ");
+    Serial.println(_process_params._frequency);
+    tone(_driver_pins._STEP, _process_params._frequency);
+}
 void MotorController::return_home()
 {
     // TODO:
+    change_dir_state(BACKWARD);
+    change_en_state(HIGH);
+    tone(_driver_pins._STEP, 15000);
 }
 void MotorController::change_dir_state()
 {
@@ -87,17 +99,11 @@ void MotorController::change_en_state(uint8_t state)
     digitalWrite(_driver_pins._EN, state);
     set_en_state(state);
 }
-uint64_t MotorController::calc_num_pulses()
-{
-    _process_params._num_pulses = _driver_params._pulses_per_rev * _process_params._distance;
-    return _process_params._num_pulses;
-}
-float MotorController::calc_freq()
-{
-    // TODO:  calc based on speed
-    // _process_params._frequency = _process_params._distance / (_process_params._time * 60);
-    // _process_params._frequency = 
-}
+// uint64_t MotorController::calc_num_pulses()
+// {
+//     _process_params._num_pulses = _driver_params._pulses_per_rev * _process_params._distance;
+//     return _process_params._num_pulses;
+// }
 void MotorController::set_last_pos(const uint8_t pos)
 {
     _process_params._last_pos = pos;
@@ -110,9 +116,11 @@ void MotorController::set_en_state(const uint8_t  state)
 {
     _process_params._en_state = state;
 }
-void MotorController::set_freq(const uint8_t freq)
+void MotorController::set_freq(const long freq)
 {
     _process_params._frequency = freq;
+    Serial.print("set Freq: ");
+    Serial.println(freq);
 }
 void MotorController::set_num_pulses(const uint64_t num)
 {
@@ -136,7 +144,7 @@ const ProcessParameters MotorController::get_process_params()
 }
 void MotorController::set_pos(uint8_t pos)
 {
-    change_en_state(LOW);
+    // change_en_state(LOW);
     set_last_pos(pos);
 }
 /* IMPROVEMENT

@@ -46,6 +46,7 @@ private:
     bool _adjust_menu = false;
     bool _change_window = false;
     bool _init_process = false;
+    bool _return_home = false;
     
 
 public:
@@ -58,11 +59,13 @@ public:
     void get_button_input();
     
     void set_init_process(bool var);
+    void set_return_home(bool var);
     void set_change_menu(bool var);
     void set_adjust_menu(bool var);
     void set_change_window(bool var);
 
     const bool get_init_process();
+    const bool get_return_home();
     const bool get_change_menu();
     const bool get_adjust_menu();
     const bool get_change_window();

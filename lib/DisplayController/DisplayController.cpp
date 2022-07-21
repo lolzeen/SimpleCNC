@@ -11,26 +11,32 @@ DisplayController::~DisplayController()
 void DisplayController::display_menu()
 {
     switch (get_current_window())
-    {   
-    case 1:
+    {
+        case 1:
         _lcd.clear();
         _lcd.print(_content_menus[1][0]);
         _lcd.setCursor(0, 1);
         _lcd.print(_content_menus[1][1]);
-        break;
-    case 2:
-        _lcd.clear();
-        _lcd.print(_content_menus[2][0]);
-        _lcd.setCursor(0, 1);
-        _lcd.print(_content_menus[2][1]);
-        break;
-    default:
-        _lcd.clear();
-        _lcd.print(_content_menus[0][0]);
-        _lcd.setCursor(0, 1);
-        _lcd.print(_content_menus[0][1]);
-        set_current_window(0);
-        break;
+        break; 
+        case 2:
+            _lcd.clear();
+            _lcd.print(_content_menus[2][0]);
+            _lcd.setCursor(0, 1);
+            _lcd.print(_content_menus[2][1]);
+            break;
+        case 3:
+            _lcd.clear();
+            _lcd.print(_content_menus[3][0]);
+            _lcd.setCursor(0, 1);
+            _lcd.print(_content_menus[3][1]);
+            break;
+        default:
+            _lcd.clear();
+            _lcd.print(_content_menus[0][0]);
+            _lcd.setCursor(0, 1);
+            _lcd.print(_content_menus[0][1]);
+            set_current_window(0);
+            break;
     }
     // Serial.println("Display Updated");
 }
@@ -56,14 +62,28 @@ void DisplayController::initialize_display()
     set_current_window(0);
     display_menu();
 }
-void DisplayController::set_menu_content(long content)
+void DisplayController::set_feed_speed(long var)
 {
-    _feed_speed = content;
+    _feed_speed = var;
+    set_menu_content(_feed_speed);
+}
+void DisplayController::set_dive_speed(long var)
+{
+    _dive_speed = var;
+    set_menu_content(_dive_speed);
+    
+}
+void DisplayController::set_menu_content(const long& content)
+{
     _content_menus[get_current_window()][1] = content;
     _content_menus[get_current_window()][1] += " cm/min";
     display_menu();
 }
-long DisplayController::get_feed_speed()
+const long DisplayController::get_feed_speed()
 {
     return _feed_speed;
+}
+const long DisplayController::get_dive_speed()
+{
+    return _dive_speed;
 }

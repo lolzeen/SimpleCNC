@@ -47,12 +47,13 @@ class DisplayController
         const uint8_t display_d7 = 8; 
         LiquidCrystal _lcd = LiquidCrystal(display_rs, display_en, display_d4, display_d5, display_d6, display_d7);
 
-        const uint8_t _num_windows = 3;
+        static const uint8_t _num_windows = 4;
         int _current_window = 0;
         void set_current_window(uint8_t new_window);
 
-        String _content_menus[3][2] = {{"Iniciar Processo", "Ajustes ->"}, {"Vel. Avanco", "cm/min"}, {"Vel. Mergulho", "cm/min"}};
-        uint16_t _feed_speed; // TODO fix nam
+        String _content_menus[_num_windows][2] = {{"Iniciar Processo", ""}, {"Retornar", ""}, {"Vel. Avanco", "cm/min"}, {"Vel. Mergulho", "cm/min"}};
+        long _feed_speed; // TODO fix name
+        long _dive_speed;
         // uint16_t dive_speed;
         void display_menu();
         
@@ -61,9 +62,12 @@ class DisplayController
         ~DisplayController();
         int get_current_window();
         // uint8_t get_dive_speed();
-        long get_feed_speed(); // TODO fix name
+        const long get_feed_speed(); // TODO fix name
+        const long get_dive_speed();
 
-        void set_menu_content(long content);
+        void set_feed_speed(long var);
+        void set_dive_speed(long var);
+        void set_menu_content(const long& content);
         void next_window();
         void initialize_display();
 };
