@@ -44,10 +44,10 @@ void MotorController::io_setup(const DriverPins &pins)
 void MotorController::set_process()
 {
     calc_freq();
-    set_ocr(calc_ocr());
-    Serial.print("OCR: ");
-    Serial.println(_ocr);
-    set_timers();
+    // set_ocr(calc_ocr());
+    // Serial.print("OCR: ");
+    // Serial.println(_ocr);
+    // set_timers();
 }
 // void MotorController::set_process(uint8_t mode) // TODO
 // {
@@ -61,52 +61,50 @@ void MotorController::set_process()
 //         break;
 //     }
 // }
-void MotorController::set_timers()
-{
-    cli();
-    switch (_driver_pins._STEP)
-    {
-    case 6:
-        // timer 4
-        // pinMode(11, OUTPUT);
-        TCCR4A = _BV(COM4A0) | _BV(COM4B0) | _BV(COM4C0) | _BV(WGM40); // 01010101
-        TCCR4B = _BV(WGM43)| _BV(CS42) | _BV(CS40); //00010001
-        OCR4A = _ocr;
-        // TIMSK4 |= (1 << OCIE4A);
-        break;
 
-    case 5:    
-        // timer 3
-        // pinMode(5, OUTPUT);
-        TCCR3A =  _BV(COM3A0) | _BV(COM3B0) | _BV(COM3C0) | _BV(WGM30); // 01010101
-        TCCR3B = _BV(WGM33) | _BV(CS32) | _BV(CS30); //00010001
-        OCR3A = _ocr;
-        // TIMSK3 |= (1 << OCIE3A);
-        break;
-    default:
-        break;
-        
-    }
-    sei();
-}
-void MotorController::stop_timers(uint8_t id)
-{
-    switch (id)
-    {
-    case 4:
-        TCCR4A = _BV(COM4A0) | _BV(WGM40); // 01010101
-        TCCR4B = _BV(WGM43); //00010000
-        break;
-    
-    case 3:
-        TCCR3A = _BV(COM3A0) | _BV(WGM30); // 01010101
-        TCCR3B = _BV(WGM33); //00010000
-        break;
+// void MotorController::set_timers()
+// {
+//     cli();
+//     switch (_driver_pins._STEP)
+//     {
+//     case 6:
+//         // timer 4
+//         // pinMode(11, OUTPUT);
+//         TCCR4A = _BV(COM4A0) | _BV(COM4B0) | _BV(COM4C0) | _BV(WGM40); // 01010101
+//         TCCR4B = _BV(WGM43)| _BV(CS42) | _BV(CS40); //00010001
+//         OCR4A = _ocr;
+//         // TIMSK4 |= (1 << OCIE4A);
+//         break;
+//     case 5:    
+//         // timer 3
+//         // pinMode(5, OUTPUT);
+//         TCCR3A =  _BV(COM3A0) | _BV(COM3B0) | _BV(COM3C0) | _BV(WGM30); // 01010101
+//         TCCR3B = _BV(WGM33) | _BV(CS32) | _BV(CS30); //00010001
+//         OCR3A = _ocr;
+//         // TIMSK3 |= (1 << OCIE3A);
+//         break;
+//     default:
+//         break;
+//     }
+//     sei();
+// }
 
-    default:
-        break;
-    }
-}
+// void MotorController::stop_timers(uint8_t id)
+// {
+//     switch (id)
+//     {
+//     case 4:
+//         TCCR4A = _BV(COM4A0) | _BV(WGM40); // 01010101
+//         TCCR4B = _BV(WGM43); //00010000
+//         break;
+//     case 3:
+//         TCCR3A = _BV(COM3A0) | _BV(WGM30); // 01010101
+//         TCCR3B = _BV(WGM33); //00010000
+//         break;
+//     default:
+//         break;
+//     }
+// }
 void MotorController::start_process()
 {
     if (!_en_state)

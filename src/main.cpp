@@ -90,7 +90,7 @@ void loop ()
 {
     if(isrx_1)
     {
-        eixo_x.stop_timers(3);
+        // eixo_x.stop_timers(3);
         eixo_x.set_en_state(false);
         eixo_x.set_last_pos(HOME);
         isrx_1 = false;
@@ -98,21 +98,21 @@ void loop ()
     }
     else if (isrx_2)
     {
-        eixo_x.stop_timers(3);
+        // eixo_x.stop_timers(3);
         eixo_x.set_en_state(false);
         eixo_x.set_last_pos(FINISH);
         isrx_2 = false;
     }
     else if (isrz_1)
     {
-        eixo_z.stop_timers(4);
+        // eixo_z.stop_timers(4);
         eixo_z.set_en_state(false);
         eixo_z.set_last_pos(HOME);
         isrz_1 = false;
     }
     else if (isrz_2)
     {
-        eixo_z.stop_timers(4);
+        // eixo_z.stop_timers(4);
         eixo_z.set_en_state(false);
         eixo_z.set_last_pos(FINISH);
         isrz_2 = false;
@@ -163,6 +163,7 @@ void loop ()
         eixo_x.start_process();
         eixo_z.start_process();
         interface.set_init_process(false);
+        
         // uint64_t time = micros();
         // bool var = true;
         // while (var) 

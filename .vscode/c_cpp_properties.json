@@ -1,0 +1,74 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
+{
+    "configurations": [
+        {
+            "name": "PlatformIO",
+            "includePath": [
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/include",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/src",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/UserInterface",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/Button",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/Calculator",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/MotorController",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/DisplayController",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/.pio/libdeps/megaatmega2560/AccelStepper/src",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/.pio/libdeps/megaatmega2560/LiquidCrystal/src",
+                "/Users/leleo/.platformio/packages/framework-arduino-avr/cores/arduino",
+                "/Users/leleo/.platformio/packages/framework-arduino-avr/variants/mega",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/alarms",
+                "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/.pio/libdeps/megaatmega2560/Unity/src",
+                "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src",
+                "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/HID/src",
+                "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/SPI/src",
+                "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/SoftwareSerial/src",
+                "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/include",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/src",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/UserInterface",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/Button",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/Calculator",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/MotorController",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/DisplayController",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/.pio/libdeps/megaatmega2560/AccelStepper/src",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/.pio/libdeps/megaatmega2560/LiquidCrystal/src",
+                    "/Users/leleo/.platformio/packages/framework-arduino-avr/cores/arduino",
+                    "/Users/leleo/.platformio/packages/framework-arduino-avr/variants/mega",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/lib/alarms",
+                    "/Users/leleo/Documents/2022-1/Iniciação-Científica/script/SimpleCNC/.pio/libdeps/megaatmega2560/Unity/src",
+                    "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src",
+                    "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/HID/src",
+                    "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/SPI/src",
+                    "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/SoftwareSerial/src",
+                    "/Users/leleo/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
+                    ""
+                ]
+            },
+            "defines": [
+                "PLATFORMIO=60103",
+                "ARDUINO_AVR_MEGA2560",
+                "F_CPU=16000000L",
+                "ARDUINO_ARCH_AVR",
+                "ARDUINO=10808",
+                "__AVR_ATmega2560__",
+                ""
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "compilerPath": "/Users/leleo/.platformio/packages/toolchain-atmelavr/bin/avr-gcc",
+            "compilerArgs": [
+                "-mmcu=atmega2560",
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}
