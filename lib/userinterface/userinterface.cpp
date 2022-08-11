@@ -17,9 +17,9 @@ UserInterface::~UserInterface()
 void UserInterface::get_pot_input()
 {
     int new_reading = analogRead(_pot_pin);
-    if (new_reading <= _pot_value - 10 || new_reading > _pot_value + 10)
+    if (new_reading < _pot_value - 1 || new_reading > _pot_value + 1)
     {
-        _pot_value = new_reading;
+        _pot_value = conv_pot_speed(new_reading);
         set_adjust_menu(true);
         // content_menus[_current_window][1] = _pot_value;
         // display_menu();
@@ -93,5 +93,13 @@ const bool UserInterface::get_return_home()
 const int UserInterface::get_pot_value()
 {
     return _pot_value;
+}
+uint8_t UserInterface::conv_pot_speed(const int pot_reading)
+{
+  uint8_t _in_min = 0;
+  uint16_t _in_max = 1023;
+  uint8_t _out_min = 100;
+  uint8_t _out_max = 0;
+  return map(pot_reading, _in_min, _in_max, _out_min, _out_max);
 }
 

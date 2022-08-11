@@ -47,8 +47,9 @@ private:
     bool _change_window = false;
     bool _init_process = false;
     bool _return_home = false;
-    
 
+    uint8_t conv_pot_speed(const int pot_reading);
+    
 public:
     UserInterface();
     // UserInterface(const InputPins& in_pins, const DisplayPins& disp_pins,  const DriverPins& driv_pins_x, const DriverPins& driv_pins_z);

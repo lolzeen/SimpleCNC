@@ -1,4 +1,4 @@
-#include "motorcontroller.hpp"
+#include "MotorController.hpp"
 
 
 MotorController::MotorController()
@@ -8,14 +8,19 @@ MotorController::MotorController()
 MotorController::MotorController(const DriverPins &pins)
 {
     io_setup(pins);
-    _driver_params =  {20000};
-    process_setup();
+    _pulses_per_rev =  20000;
+    set_en_state(LOW);
 }
-MotorController::MotorController(const DriverPins &pins, const DriverParameters &params_driver)
+// MotorController::MotorController(const DriverPins &pins, const DriverParameters &params_driver)
+// {
+//     io_setup(pins);
+//     _pulses_per_rev = params_driver._pulses_per_rev;
+//     set_en_state(LOW);
+// }
+MotorController::MotorController(const DriverPins &pins, const uint16_t &driver_pul_rev)
 {
     io_setup(pins);
-    _driver_params = params_driver;
-    process_setup();
+    _pulses_per_rev = driver_pul_rev;
 }
 MotorController::~MotorController()
 {
@@ -30,130 +35,211 @@ void MotorController::io_setup(const DriverPins &pins)
     Serial.println("End Switches Pins are set!");
     pinMode(_driver_pins._DIR, OUTPUT);
     pinMode(_driver_pins._EN, OUTPUT);
+    set_en_state(LOW);
     pinMode(_driver_pins._STEP, OUTPUT);
+    digitalWrite(_driver_pins._STEP, LOW);
     pinMode(_driver_pins._OUT, INPUT);
     Serial.println("Driver Pins are set!");
 }
-void MotorController::process_setup()
+void MotorController::set_process()
 {
-    // TODO: review usability probably start_process is more usefull
-    set_last_pos(HOME);
-    change_dir_state(FORWARD);
-    change_en_state(LOW);
-    set_distance(MAX_DISTANCE);
-    set_time(MIN_TIME);
-    set_speed(MAX_DISTANCE/MIN_TIME);
-    // the functions below do not have acess to the data they need
-    // FIXME set_freq(calc_freq());
-    // FIXME set_num_pulses(calc_num_pulses());
-    // TODO: call return home
+    calc_freq();
+    set_ocr(calc_ocr());
+    Serial.print("OCR: ");
+    Serial.println(_ocr);
+    set_timers();
+}
+// void MotorController::set_process(uint8_t mode) // TODO
+// {
+//     switch (mode)
+//     {
+//     case 1:
+//         calc_freq();
+//         uint64_t ini = micros();
+//         break;
+//     default:
+//         break;
+//     }
+// }
+void MotorController::set_timers()
+{
+    cli();
+    switch (_driver_pins._STEP)
+    {
+    case 6:
+        // timer 4
+        // pinMode(11, OUTPUT);
+        TCCR4A = _BV(COM4A0) | _BV(COM4B0) | _BV(COM4C0) | _BV(WGM40); // 01010101
+        TCCR4B = _BV(WGM43)| _BV(CS42) | _BV(CS40); //00010001
+        OCR4A = _ocr;
+        // TIMSK4 |= (1 << OCIE4A);
+        break;
+
+    case 5:    
+        // timer 3
+        // pinMode(5, OUTPUT);
+        TCCR3A =  _BV(COM3A0) | _BV(COM3B0) | _BV(COM3C0) | _BV(WGM30); // 01010101
+        TCCR3B = _BV(WGM33) | _BV(CS32) | _BV(CS30); //00010001
+        OCR3A = _ocr;
+        // TIMSK3 |= (1 << OCIE3A);
+        break;
+    default:
+        break;
+        
+    }
+    sei();
+}
+void MotorController::stop_timers(uint8_t id)
+{
+    switch (id)
+    {
+    case 4:
+        TCCR4A = _BV(COM4A0) | _BV(WGM40); // 01010101
+        TCCR4B = _BV(WGM43); //00010000
+        break;
+    
+    case 3:
+        TCCR3A = _BV(COM3A0) | _BV(WGM30); // 01010101
+        TCCR3B = _BV(WGM33); //00010000
+        break;
+
+    default:
+        break;
+    }
 }
 void MotorController::start_process()
 {
-    change_dir_state(FORWARD);
-    change_en_state(HIGH);
-    Serial.print("Freq: ");
-    Serial.println(_process_params._frequency);
-    tone(_driver_pins._STEP, _process_params._frequency);
+    if (!_en_state)
+    {
+        set_process();
+        set_dir_state(FORWARD);
+        set_en_state(HIGH);
+    }
+//     Serial.print("Freq: ");
+//     Serial.println(_frequency);
+//     tone(_driver_pins._STEP, _frequency);
 }
 void MotorController::return_home()
 {
-    // TODO:
-    change_dir_state(BACKWARD);
-    change_en_state(HIGH);
-    tone(_driver_pins._STEP, 15000);
-}
-void MotorController::change_dir_state()
-{
-    if (_process_params._dir_state)
+    if (!_en_state)
     {
-        digitalWrite(_driver_pins._DIR, FORWARD);
-        set_dir_state(FORWARD);
-    }
-    else
-    {
-        digitalWrite(_driver_pins._DIR, BACKWARD);
         set_dir_state(BACKWARD);
-    }
-}
-void MotorController::change_dir_state(uint8_t state)
-{
-    digitalWrite(_driver_pins._DIR, state);
-    set_dir_state(state);
-}
-void MotorController::change_en_state()
-{
-    if (_process_params._en_state)
-    {
-        digitalWrite(_driver_pins._EN, LOW);
-        set_en_state(LOW);
-    }
-    else
-    {
-        digitalWrite(_driver_pins._EN, HIGH);
+        set_distance(MAX_DISTANCE);
+        set_time(MIN_TIME*8);
+        set_speed(MAX_DISTANCE/MIN_TIME);
+        set_process();
         set_en_state(HIGH);
     }
+    // tone(_driver_pins._STEP, 15000);  
 }
-void MotorController::change_en_state(uint8_t state)
-{
-    digitalWrite(_driver_pins._EN, state);
-    set_en_state(state);
-}
-// uint64_t MotorController::calc_num_pulses()
-// {
-//     _process_params._num_pulses = _driver_params._pulses_per_rev * _process_params._distance;
-//     return _process_params._num_pulses;
-// }
+
 void MotorController::set_last_pos(const uint8_t pos)
 {
-    _process_params._last_pos = pos;
+    _last_pos = pos;
 }
 void MotorController::set_dir_state(const uint8_t state)
 {
-    _process_params._dir_state = state;
+    _dir_state = state;
+    digitalWrite(_driver_pins._DIR, _dir_state);
 }
 void MotorController::set_en_state(const uint8_t  state)
 {
-    _process_params._en_state = state;
+    _en_state = state;
+    digitalWrite(_driver_pins._EN, _en_state);
 }
 void MotorController::set_freq(const long freq)
 {
-    _process_params._frequency = freq;
-    Serial.print("set Freq: ");
-    Serial.println(freq);
+    _frequency = freq;
+    // Serial.print("set Freq: ");
+    // Serial.println(freq);
 }
 void MotorController::set_num_pulses(const uint64_t num)
 {
-    _process_params._num_pulses = num;
+    _num_pulses = num;
 }
 void MotorController::set_distance(const uint8_t dist)
 {
-    _process_params._distance = dist;
+    _distance = dist;
 }
 void MotorController::set_time(const uint8_t time)
 {
-    _process_params._time = time;
+    _time = time;
 }
 void MotorController::set_speed(const uint8_t speed)
 {
-    _process_params._speed = speed;
-}
-const ProcessParameters MotorController::get_process_params()
-{
-    return _process_params;
+    _speed = speed;
 }
 void MotorController::set_pos(uint8_t pos)
 {
     // change_en_state(LOW);
     set_last_pos(pos);
 }
+void MotorController::set_ocr(const uint16_t ocr_top)
+{
+    _ocr = ocr_top;
+}
+
+const uint8_t MotorController::get_dir_state()
+{
+    return _dir_state;
+}
+const uint8_t MotorController::get_en_state()
+{
+    return _en_state;
+}
+const long MotorController::get_freq()
+{
+    return _frequency;
+}
+const uint8_t MotorController::get_distance()
+{
+    return _distance;
+}
+const uint8_t MotorController::get_time()
+{
+    return _time;
+}
+const uint8_t MotorController::get_speed()
+{
+    return _speed;
+}
+const uint16_t MotorController::get_ocr()
+{
+    return _ocr;
+}
+const uint8_t MotorController::get_pos()
+{
+    return _last_pos;
+}
+
+void MotorController::calc_freq()
+{
+    _frequency = _speed*(_pulses_per_rev/0.008)/(60*100);
+    Serial.print("Freq: ");
+    Serial.println(_frequency);
+}
+// void MotorController::calc_freq(const int val)
+// {
+//     _frequency = val*_pulses_per_rev/48;
+// }
+uint16_t MotorController::calc_ocr()
+{
+    return 16e6 / (2 * _frequency * 1024);
+}
+// uint8_t MotorController::conv_pot_speed(const int pot_reading)
+// {
+//   uint8_t _in_min = 0;
+//   uint16_t _in_max = 1023;
+//   uint8_t _out_min = 90;
+//   uint8_t _out_max = 6;
+//   return map(pot_reading, _in_min, _in_max, _out_min, _out_max);
+// }
 /* IMPROVEMENT
 void set_units(char* dist_unit, char* time_unit)
 {
     set_dist_unit(dist_unit);
     set_time_unit(time_unit);
 }
-
 void set_time_unit(char* time_unit)
 {
     switch (*time_unit)

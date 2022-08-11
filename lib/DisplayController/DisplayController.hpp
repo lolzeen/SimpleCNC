@@ -68,6 +68,7 @@ class DisplayController
         void set_feed_speed(long var);
         void set_dive_speed(long var);
         void set_menu_content(const long& content);
+        
         void next_window();
         void initialize_display();
 };

@@ -2,13 +2,12 @@
 #include "MotorController.hpp"
 #include "UserInterface.hpp"
 #include "DisplayController.hpp"
-#include "Calculator.hpp"
+
 
 /* ----- Driver Pins ----- */
-// const int ENX = 13, DIRX = 12, STEPX = 11, ENZ = 8, DIRZ = 9, STEPZ = 10, ESX1 = 18, ESX2 = 19, ESZ1 = 20, ESZ2 = 21, OUTX = 22, OUTZ = 23;
-const int ENX = 38, DIRX = 41, STEPX = 39, ENZ = 37, DIRZ = 36, STEPZ = 35, ESX1 = 18, ESX2 = 19, ESZ1 = 26, ESZ2 = 27, OUTX = 28, OUTZ = 29; // testing only
+const int ENX = 38, DIRX = 41, STEPX = 5, ENZ = 32, DIRZ = 35, STEPZ = 6, ESX1 = 20, ESX2 = 21, ESZ1 = 19, ESZ2 = 18, OUTX = 28, OUTZ = 29;
 DriverPins driver_x_pins = {ESX1, ESX2, DIRX, ENX, STEPX, OUTX};
-// DriverPins driver_z_pins = {ESZ1, ESZ2,  DIRZ, ENZ, STEPZ, OUTZ};
+DriverPins driver_z_pins = {ESZ1, ESZ2,  DIRZ, ENZ, STEPZ, OUTZ};
 
 /* ----- Display Pins ----- */
 const uint8_t display_rs = 13;
@@ -16,68 +15,109 @@ const uint8_t display_en = 12;
 const uint8_t display_d4 = 11;
 const uint8_t display_d5 = 10;
 const uint8_t display_d6 = 9;
-const uint8_t display_d7 = 8; 
+const uint8_t display_d7 = 8;
 DisplayPins display_pins = {display_rs, display_en, display_d4, display_d5, display_d6, display_d7};
 
 /* ---- Input Pins ----- */
-const uint8_t button_change = 4;
-const uint8_t button_select = 5;
+const uint8_t button_change = 24;
+const uint8_t button_select = 25;
 const uint8_t potentiometer = A0;
 InputPins input_pins = {button_change, button_select, potentiometer};
 
 /* ---- Driver Parameters ----- */
-const DriverParameters driver_params = {15000};
+const uint16_t driver_params = 8000;
+// bool step_x_state = LOW;
+// bool step_z_state = LOW;
+//FIXME
 
 MotorController eixo_x(driver_x_pins, driver_params);
-// MotorController eixo_z(driver_z_pins, driver_params);
-
+MotorController eixo_z(driver_z_pins, driver_params);
 UserInterface interface(input_pins);
 DisplayController display;
 
+
+bool isrx_1 = false;
+bool isrx_2 = false;
+bool isrz_1 = false;
+bool isrz_2 = false;
 /* ----- ISRs ----- */
 void isr_x1()
 {
+    noInterrupts();
     digitalWrite(driver_x_pins._EN, LOW);
-    // eixo_x.move = false;
-    eixo_x.set_en_state(false);
-    noTone(driver_x_pins._STEP);
-    eixo_x.set_pos(HOME);
-    interface.set_init_process(false);
-    interface.set_return_home(false);
+    // digitalWrite(driver_x_pins._STEP, LOW);
+    isrx_1 = true;
+    Serial.println("isrx1");
+    interrupts();
 }
-void isr_x2()
-{
-    digitalWrite(driver_x_pins._EN, LOW);
-    eixo_x.set_en_state(false);
-    noTone(driver_x_pins._STEP);
-    // eixo_x.move = false;
-    eixo_x.set_pos(FINISH);
-    interface.set_init_process(false);
-    interface.set_return_home(false);
-}
-// void isr_z1()
+// void isr_x2()
 // {
-//     eixo_x.set_pos(HOME);
+    // noInterrupts();
+//     digitalWrite(driver_x_pins._EN, LOW);
+//     isrx_2 = true;
+// interrupts();
 // }
+void isr_z1()
+{
+    noInterrupts();
+    digitalWrite(driver_z_pins._EN, LOW);
+    // digitalWrite(driver_z_pins._STEP, LOW);
+    isrz_1 = true;
+    Serial.println("isrz1");
+    interrupts();
+}
 // void isr_z2()
 // {
-//     eixo_x.set_pos(FINISH);
+    // noInterrupts();
+//     digitalWrite(driver_z_pins._EN, LOW);
+//     isrz_1 = true;
+// interrupts();
 // }
 
 void setup ()
 {
     Serial.begin(9600);
-    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES1), isr_x1, FALLING);
-    attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES2), isr_x2, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES1), isr_z1, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES2), isr_z2, FALLING);
+    attachInterrupt(INT3, isr_x1, HIGH); // i0
+    // attachInterrupt(digitalPinToInterrupt(driver_x_pins._ES2), isr_x2, LOW); // i1
+    attachInterrupt(INT4, isr_z1, HIGH); // i2
+    // attachInterrupt(digitalPinToInterrupt(driver_z_pins._ES2), isr_z2, LOW); // i3
     eixo_x.set_distance(30);
-    // eixo_z.set_distance(30);
+    eixo_z.set_distance(30);
     
 }
 
 void loop ()
 {
+    if(isrx_1)
+    {
+        eixo_x.stop_timers(3);
+        eixo_x.set_en_state(false);
+        eixo_x.set_last_pos(HOME);
+        isrx_1 = false;
+
+    }
+    else if (isrx_2)
+    {
+        eixo_x.stop_timers(3);
+        eixo_x.set_en_state(false);
+        eixo_x.set_last_pos(FINISH);
+        isrx_2 = false;
+    }
+    else if (isrz_1)
+    {
+        eixo_z.stop_timers(4);
+        eixo_z.set_en_state(false);
+        eixo_z.set_last_pos(HOME);
+        isrz_1 = false;
+    }
+    else if (isrz_2)
+    {
+        eixo_z.stop_timers(4);
+        eixo_z.set_en_state(false);
+        eixo_z.set_last_pos(FINISH);
+        isrz_2 = false;
+    }
+    
     interface.get_button_input();
     if (interface.get_change_window())
     {
@@ -101,7 +141,9 @@ void loop ()
             interface.get_pot_input();
             if (interface.get_adjust_menu())
             {
-                display.set_feed_speed(conv_pot_speed(interface.get_pot_value()));
+                eixo_x.set_speed(interface.get_pot_value());
+                display.set_feed_speed(eixo_x.get_speed()); // IMPROVEMENT: same value stored 2 times
+                
             }
             interface.get_button_input();
         }
@@ -110,26 +152,43 @@ void loop ()
             interface.get_pot_input();
             if (interface.get_adjust_menu())
             {
-                display.set_dive_speed(conv_pot_speed(interface.get_pot_value()));
+                eixo_z.set_speed(interface.get_pot_value());
+                display.set_dive_speed(eixo_z.get_speed());
             }
             interface.get_button_input();
         }
     }
     if (interface.get_init_process())
     {
-        Serial.print("Display Speed:");
-        Serial.println(display.get_feed_speed());
-        Serial.println(calc_freq(display.get_feed_speed(), driver_params._pulses_per_rev));
-        eixo_x.set_freq(calc_freq(display.get_feed_speed(), driver_params._pulses_per_rev));
         eixo_x.start_process();
-        // eixo_x.set_en_state(true);
-        // digitalWrite(driver_x_pins._EN, HIGH);
-        // eixo_x.move = true;
-        // tone(driver_x_pins._STEP, eixo_x.get_process_params()._frequency);
+        eixo_z.start_process();
+        interface.set_init_process(false);
+        // uint64_t time = micros();
+        // bool var = true;
+        // while (var) 
+        // {
+        //     if (1/eixo_x.get_freq() == micros() - time)
+        //     {
+        //         digitalWrite(eixo_x._driver_pins._EN, HIGH);
+        //     }
+        // }
     }
     if (interface.get_return_home())
     {
         eixo_x.return_home();
+        eixo_z.return_home();
+        interface.set_return_home(false);
     }
 }
 
+// ISR(TIMER3_COMPA_vect)
+// {
+//     digitalWrite(driver_x_pins._STEP, step_x_state);
+//     step_x_state = !step_x_state;
+// }
+// ISR(TIMER4_COMPA_vect)
+// {
+//     digitalWrite(driver_z_pins._STEP, step_z_state);
+//     step_z_state = !step_z_state;
+// }
+// FIXME
