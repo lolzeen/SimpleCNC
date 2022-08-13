@@ -6,8 +6,8 @@
 
 const uint8_t HOME = 0;
 const uint8_t FINISH = 1;
-const uint8_t FORWARD = 0; // TODO: confirm this with driver 
-const uint8_t BACKWARD = 1; // TODO: confirm this with driver 
+const uint8_t FORWARD = 1;
+const uint8_t BACKWARD = 0;
 const uint8_t MAX_DISTANCE = 34; // cm // TODO: confirm this with CAD model
 const double MIN_TIME = 0.5; // minutes // TODO: confirm this with CAD model
 
@@ -55,13 +55,7 @@ class MotorController
         uint16_t _pulses_per_rev;
 
         DriverPins _driver_pins;
-        // DriverParameters _driver_params;
-        // ProcessParameters _process_params;
-
-        // IMPROVEMENT void set_dist_unit(char* dist_unit);
-        // IMPROVEMENT void set_time_unit(char* time_unit);
-        // float calc_freq();
-        
+       
         uint64_t calc_num_pulses();
         void io_setup(const DriverPins &pins);
         void set_process();
@@ -75,7 +69,6 @@ class MotorController
     public:
         MotorController();
         MotorController(const DriverPins &pins);
-        // MotorController(const DriverPins &pins,  const DriverParameters &params_driver);
         MotorController(const DriverPins &pins, const uint16_t &driver_pul_rev);
         ~MotorController();
 
@@ -94,7 +87,6 @@ class MotorController
         void set_last_pos(const uint8_t pos);  // TODO: review usability
         void set_pos(uint8_t pos); // TODO: find better name for this function  // TODO: review usability
 
-        // const ProcessParameters get_process_params();
         const uint8_t get_dir_state();
         const uint8_t get_en_state();
         const long get_freq();

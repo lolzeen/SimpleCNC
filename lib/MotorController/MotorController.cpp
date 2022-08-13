@@ -43,63 +43,42 @@ void MotorController::io_setup(const DriverPins &pins)
 }
 void MotorController::set_process()
 {
+    noInterrupts();
     calc_freq();
     set_ocr(calc_ocr());
-    Serial.print("OCR: ");
-    Serial.println(_ocr);
     set_timers();
+    interrupts();
 }
-// void MotorController::set_process(uint8_t mode) // TODO
-// {
-//     switch (mode)
-//     {
-//     case 1:
-//         calc_freq();
-//         uint64_t ini = micros();
-//         break;
-//     default:
-//         break;
-//     }
-// }
 void MotorController::set_timers()
 {
-    cli();
     switch (_driver_pins._STEP)
     {
     case 6:
-        // timer 4
-        // pinMode(11, OUTPUT);
         TCCR4A = _BV(COM4A0) | _BV(COM4B0) | _BV(COM4C0) | _BV(WGM40); // 01010101
-        TCCR4B = _BV(WGM43)| _BV(CS42) | _BV(CS40); //00010001
+        TCCR4B = _BV(WGM43) | _BV(CS40); //00010001
         OCR4A = _ocr;
-        // TIMSK4 |= (1 << OCIE4A);
         break;
 
     case 5:    
-        // timer 3
-        // pinMode(5, OUTPUT);
         TCCR3A =  _BV(COM3A0) | _BV(COM3B0) | _BV(COM3C0) | _BV(WGM30); // 01010101
-        TCCR3B = _BV(WGM33) | _BV(CS32) | _BV(CS30); //00010001
+        TCCR3B = _BV(WGM33) | _BV(CS30); //00010001
         OCR3A = _ocr;
-        // TIMSK3 |= (1 << OCIE3A);
         break;
     default:
         break;
-        
     }
-    sei();
 }
 void MotorController::stop_timers(uint8_t id)
 {
     switch (id)
     {
     case 4:
-        TCCR4A = _BV(COM4A0) | _BV(WGM40); // 01010101
+        TCCR4A = _BV(COM4A0) | _BV(COM4B0) | _BV(COM4C0) | _BV(WGM40); // 01010101
         TCCR4B = _BV(WGM43); //00010000
         break;
     
     case 3:
-        TCCR3A = _BV(COM3A0) | _BV(WGM30); // 01010101
+        TCCR3A =  _BV(COM3A0) | _BV(COM3B0) | _BV(COM3C0) | _BV(WGM30); // 01010101
         TCCR3B = _BV(WGM33); //00010000
         break;
 
@@ -115,9 +94,6 @@ void MotorController::start_process()
         set_dir_state(FORWARD);
         set_en_state(HIGH);
     }
-//     Serial.print("Freq: ");
-//     Serial.println(_frequency);
-//     tone(_driver_pins._STEP, _frequency);
 }
 void MotorController::return_home()
 {
@@ -214,17 +190,14 @@ const uint8_t MotorController::get_pos()
 
 void MotorController::calc_freq()
 {
-    _frequency = _speed*(_pulses_per_rev/0.008)/(60*100);
+    // FIXME
+    _frequency = 2*_speed*(_pulses_per_rev/0.008)/(60*100);
     Serial.print("Freq: ");
     Serial.println(_frequency);
 }
-// void MotorController::calc_freq(const int val)
-// {
-//     _frequency = val*_pulses_per_rev/48;
-// }
 uint16_t MotorController::calc_ocr()
 {
-    return 16e6 / (2 * _frequency * 1024);
+    return 16e6 / (2 * _frequency);
 }
 // uint8_t MotorController::conv_pot_speed(const int pot_reading)
 // {

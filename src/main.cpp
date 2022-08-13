@@ -93,6 +93,7 @@ void loop ()
         eixo_x.stop_timers(3);
         eixo_x.set_en_state(false);
         eixo_x.set_last_pos(HOME);
+        Serial.println("isrx_1: HOME");
         isrx_1 = false;
 
     }
@@ -101,6 +102,7 @@ void loop ()
         eixo_x.stop_timers(3);
         eixo_x.set_en_state(false);
         eixo_x.set_last_pos(FINISH);
+        Serial.println("isrx_2: FINISH");
         isrx_2 = false;
     }
     else if (isrz_1)
@@ -108,6 +110,7 @@ void loop ()
         eixo_z.stop_timers(4);
         eixo_z.set_en_state(false);
         eixo_z.set_last_pos(HOME);
+        Serial.println("isrz_1: HOME");
         isrz_1 = false;
     }
     else if (isrz_2)
@@ -115,6 +118,7 @@ void loop ()
         eixo_z.stop_timers(4);
         eixo_z.set_en_state(false);
         eixo_z.set_last_pos(FINISH);
+        Serial.println("isrz_2: FINISH");
         isrz_2 = false;
     }
     
@@ -163,15 +167,6 @@ void loop ()
         eixo_x.start_process();
         eixo_z.start_process();
         interface.set_init_process(false);
-        // uint64_t time = micros();
-        // bool var = true;
-        // while (var) 
-        // {
-        //     if (1/eixo_x.get_freq() == micros() - time)
-        //     {
-        //         digitalWrite(eixo_x._driver_pins._EN, HIGH);
-        //     }
-        // }
     }
     if (interface.get_return_home())
     {
@@ -181,7 +176,6 @@ void loop ()
     }
 }
 
-// ISR(TIMER3_COMPA_vect)
 // {
 //     digitalWrite(driver_x_pins._STEP, step_x_state);
 //     step_x_state = !step_x_state;
