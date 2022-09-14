@@ -6,6 +6,7 @@ UserInterface::UserInterface()
 }
 UserInterface::UserInterface(const InputPins& in_pins)
 {
+    
     _input_pins = in_pins;
     _button.begin(in_pins.button);
     _encoder.begin(in_pins.encoder_a, in_pins.encoder_b);

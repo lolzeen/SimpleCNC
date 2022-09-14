@@ -9,5 +9,5 @@ void Button::begin(uint8_t pin)
 bool Button::debounce()
 {
       _state = (_state<<1) | digitalRead(_btn_pin) | 0xfe00;
-      return (_state == 0xef00);
+      return (_state == 0xff00);
 }

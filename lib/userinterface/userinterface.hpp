@@ -34,6 +34,7 @@ private:
     Button _button;
     Encoder _encoder;
     // DisplayPins _display_pins;
+    
     // DriverPins _driver_x_pins, _driver_z_pins;
     // Debounce _button_change, _button_select;
     // MotorController _axis_x, _axis_z;

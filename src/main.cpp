@@ -19,9 +19,9 @@ const uint8_t display_d7 = 8;
 DisplayPins display_pins = {display_rs, display_en, display_d4, display_d5, display_d6, display_d7};
 
 /* ---- Input Pins ----- */
-const uint8_t button = 2;
+const uint8_t button = 24;
 const uint8_t encoder_a = 3;
-const uint8_t encoder_b = 24;
+const uint8_t encoder_b = 25;
 InputPins input_pins = {button, encoder_a, encoder_b};
 
 /* ---- Driver Parameters ----- */
@@ -112,7 +112,7 @@ void setup ()
 
 void loop ()
 {
-    Serial.println(".");
+    // Serial.println(".");
     interface.button_press(display.get_current_window());
     if(isrx_home_flag)
     {
@@ -177,6 +177,7 @@ void loop ()
                     display.update_display();
                     enc_count = interface.get_enc_count();
                 }
+                interface.button_press(display.get_current_window());
             }
         }
         enc_count = 0;
@@ -195,5 +196,5 @@ void loop ()
         eixo_z.return_home();
         interface.set_return_home(false);
     }
-    Serial.println("..");
+    // Serial.println("..");
 }
