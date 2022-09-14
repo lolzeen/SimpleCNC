@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "Button.hpp"
+#include "Encoder.hpp"
 
 struct InputPins
 {
@@ -10,68 +11,71 @@ struct InputPins
     {
         // intentionally empty
     }
-    InputPins(const uint8_t& b1, const uint8_t& b2, const uint8_t& pot)
+    InputPins(const uint8_t& b, const uint8_t& enc_a, const uint8_t& enc_b)
     {
-        button_1 = b1;
-        button_2 = b2;
-        potentiometer = pot;
+        button = b;
+        encoder_a = enc_a;
+        encoder_b = enc_b;
     }
     InputPins(const InputPins& input_pins)
     {
-        button_1 = input_pins.button_1;
-        button_2 = input_pins.button_2;
-        potentiometer = input_pins.potentiometer;
+        button = input_pins.button;
+        encoder_a = input_pins.encoder_a;
+        encoder_b = input_pins.encoder_b;
     }
-    // button change
-    uint8_t button_1;
-    // buton select
-    uint8_t button_2;
-    uint8_t potentiometer;
+    uint8_t button;
+    uint8_t encoder_a;
+    uint8_t encoder_b;
 };
 
 class UserInterface
 {
 private:
-    Button _button_change, _button_select;
+    Button _button;
+    Encoder _encoder;
     // DisplayPins _display_pins;
     // DriverPins _driver_x_pins, _driver_z_pins;
     // Debounce _button_change, _button_select;
     // MotorController _axis_x, _axis_z;
     // DisplayController _display;
     
-    uint8_t _pot_pin;
-    int _pot_value = -10;
+    InputPins _input_pins;
+    int _speed_value = 10; // TODO: to definindo a vlocidade la no setup, tem que combinar essas duas
 
+    int8_t _enc_direction;
+    volatile int8_t _enc_count = 0;
+    bool _button_state = false;
     bool _change_menu = false;
     bool _adjust_menu = false;
     bool _change_window = false;
     bool _init_process = false;
     bool _return_home = false;
-
-    uint8_t conv_pot_speed(const int pot_reading);
     
 public:
     UserInterface();
     // UserInterface(const InputPins& in_pins, const DisplayPins& disp_pins,  const DriverPins& driv_pins_x, const DriverPins& driv_pins_z);
     UserInterface(const InputPins& in_pins);
     ~UserInterface();
-
-    void get_pot_input();
-    void get_button_input();
     
     void set_init_process(bool var);
     void set_return_home(bool var);
     void set_change_menu(bool var);
     void set_adjust_menu(bool var);
     void set_change_window(bool var);
+    void set_enc_count(int8_t num);
 
     const bool get_init_process();
     const bool get_return_home();
     const bool get_change_menu();
     const bool get_adjust_menu();
     const bool get_change_window();
-    const int get_pot_value();
+    const int get_speed_value();
+    const int8_t get_enc_direction();
+    const int8_t get_enc_count();
     
+    void button_press(const uint8_t& current_window);
+    void read_enc_values();
+    bool validate_enc_values();
 };
 
 #endif // USERINTERFACE_H

@@ -51,26 +51,24 @@ class DisplayController
         int _current_window = 0;
         void set_current_window(uint8_t new_window);
 
-        String _content_menus[_num_windows][2] = {{"Iniciar Processo", ""}, {"Retornar", ""}, {"Vel. Avanco", "cm/min"}, {"Vel. Mergulho", "cm/min"}};
-        long _feed_speed; // TODO fix name
-        long _dive_speed;
+        String _content_menus[_num_windows][2] = {{"Iniciar Processo", ""}, {"Retornar", ""}, {"Vel. Avanco", "0 cm/min"}, {"Vel. Mergulho", "0 cm/min"}};
         // uint16_t dive_speed;
-        void display_menu();
         
     public:
         DisplayController();
+        DisplayController(const uint8_t& feed_speed, const uint8_t& dive_speed);
         ~DisplayController();
         int get_current_window();
         // uint8_t get_dive_speed();
-        const long get_feed_speed(); // TODO fix name
-        const long get_dive_speed();
 
-        void set_feed_speed(long var);
-        void set_dive_speed(long var);
-        void set_menu_content(const long& content);
+        void set_menu_content(const uint8_t& content);
+        void set_menu_content(const uint8_t& feed_speed, const uint8_t& dive_speed);
         
         void next_window();
+        void previous_window();
         void initialize_display();
+        void initialize_display(bool has_init_speeds);
+        void update_display();
 };
 
 #endif // DISPLAYCONTROLLER_H
