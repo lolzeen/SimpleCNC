@@ -72,17 +72,17 @@ void isr_z2()
     interrupts();
 }
 
-void isr_button()
-{
-    // TODO remove this code
-    // this type of aproach should be implemented in the main loop or triggered by a timer interrupt
-    static uint16_t state = 0;
-    state = (state << 1) | !digitalRead(input_pins.button) | 0xe000;
-    if (0xf000 == state)
-    {
-        interface.button_press(display.get_current_window());
-    }
-}
+// void isr_button()
+// {
+//     // TODO remove this code
+//     // this type of aproach should be implemented in the main loop or triggered by a timer interrupt
+//     static uint16_t state = 0;
+//     state = (state << 1) | !digitalRead(input_pins.button) | 0xe000;
+//     if (0xf000 == state)
+//     {
+//         interface.button_press(display.get_current_window());
+//     }
+// }
 void isr_encoder()
 {
     // Serial.println("isr_encoder");
@@ -112,6 +112,8 @@ void setup ()
 
 void loop ()
 {
+    Serial.println(".");
+    interface.button_press(display.get_current_window());
     if(isrx_home_flag)
     {
         eixo_x.stop_timers(3);
@@ -193,4 +195,5 @@ void loop ()
         eixo_z.return_home();
         interface.set_return_home(false);
     }
+    Serial.println("..");
 }

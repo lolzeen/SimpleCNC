@@ -154,36 +154,40 @@ void UserInterface::read_enc_values()
 }
 void UserInterface::button_press(const uint8_t& current_window)
 {
-    Serial.println("button");
-    delayMicroseconds(500);
-    switch (current_window)
+    if (_button.debounce())
     {
-    case 0:
-        if (!get_init_process())
-            set_init_process(true);
-        else
-            set_init_process(false);
-        break;
-    case 1:
-        if (!get_return_home())
-            set_return_home(true);
-        else
-            set_return_home(false);
-        break;
-    case 2:
-        if (!get_adjust_menu())
-            set_adjust_menu(true);
-        else
-            set_adjust_menu(false);
-        break;
-    case 3:
-        if (!get_adjust_menu())
-            set_adjust_menu(true);
-        else
-            set_adjust_menu(false);
-        break;
-    default:
-        break;
+        Serial.println("button");
+        switch (current_window)
+        {
+            case 0:
+            if (!get_init_process())
+                set_init_process(true);
+            else
+                set_init_process(false);
+            break;
+            case 1:
+                if (!get_return_home())
+                    set_return_home(true);
+                else
+                    set_return_home(false);
+                break;
+            case 2:
+                if (!get_adjust_menu())
+                    set_adjust_menu(true);
+                else
+                    set_adjust_menu(false);
+                break;
+            case 3:
+                if (!get_adjust_menu())
+                    set_adjust_menu(true);
+                else
+                    set_adjust_menu(false);
+                break;
+            default:
+                break;
+        }
     }
+    delayMicroseconds(500);
+    
 }
 

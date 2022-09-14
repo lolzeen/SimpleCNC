@@ -4,4 +4,5 @@
 .vscode/launch.json
 .vscode/ipch
 .vscode/todo_list.txt
+platformio.ini
 backup
