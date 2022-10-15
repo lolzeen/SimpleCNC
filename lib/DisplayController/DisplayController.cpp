@@ -7,7 +7,8 @@ DisplayController::DisplayController()
 DisplayController::DisplayController(const uint8_t& feed_speed, const uint8_t& dive_speed)
 {
     initialize_display(true);
-    set_menu_content(feed_speed, dive_speed);
+    uint8_t content[] = {feed_speed, dive_speed};
+    set_menu_content(content, 2);
     update_display();
 }
 DisplayController::~DisplayController()
@@ -50,6 +51,11 @@ void DisplayController::update_display()
             _lcd.setCursor(0, 1);
             _lcd.print(_content_menus[3][1]);
             break;
+        case 4:
+            _lcd.clear();
+            _lcd.print(_content_menus[4][0]);
+            _lcd.setCursor(0, 1);
+            _lcd.print(_content_menus[4][1]);
         default:
             break;
     }
@@ -97,10 +103,35 @@ void DisplayController::set_menu_content(const uint8_t& content)
     _content_menus[get_current_window()][1] = content;
     _content_menus[get_current_window()][1] += " cm/min";
 }
-void DisplayController::set_menu_content(const uint8_t& _feed_speed, const uint8_t& _dive_speed)
+void DisplayController::set_menu_content(uint8_t* values, uint8_t num_values)
 {
-    _content_menus[2][1] = _feed_speed;
-    _content_menus[2][1] += " cm/min";
-    _content_menus[3][1] = _dive_speed;
-    _content_menus[3][1] += " cm/min";
+    if (num_values > 0)
+    {
+        if (num_values == 2)
+        {
+            _content_menus[2][1] = *values;
+            _content_menus[2][1] += " cm/min";
+            _content_menus[3][1] = *(values+1);
+            _content_menus[3][1] += " cm/min";
+        }
+        
+    }
+    
+}
+void DisplayController::process_window()
+{
+    for (int i = 5; i > 0 ; i--)
+    {
+        _lcd.clear();
+        _lcd.setCursor(0, 0);
+        _lcd.print("Iniciando em ");
+        _lcd.print(i);
+        _lcd.print("s");
+        delay(1000);
+    }
+    _lcd.clear();
+    _lcd.setCursor(0,0);
+    _lcd.print("Executando");
+    _lcd.setCursor(1,0);
+    _lcd.print("Processo");
 }

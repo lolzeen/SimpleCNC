@@ -6,9 +6,8 @@ UserInterface::UserInterface()
 }
 UserInterface::UserInterface(const InputPins& in_pins)
 {
-    
     _input_pins = in_pins;
-    _button.begin(in_pins.button);
+    _button.begin(in_pins.button, true);
     _encoder.begin(in_pins.encoder_a, in_pins.encoder_b);
 }
 UserInterface::~UserInterface()
@@ -122,7 +121,7 @@ const int8_t UserInterface::get_enc_count()
 }
 void UserInterface::read_enc_values()
 {
-    delayMicroseconds(100);
+    delayMicroseconds(90); // previous setting 100
     uint8_t state = (digitalRead(_input_pins.encoder_a) << 1 | digitalRead(_input_pins.encoder_b));
     static uint8_t start_byte[2];
     if (state >= 2)
@@ -151,7 +150,7 @@ void UserInterface::read_enc_values()
     {
         _enc_count = -1;
     }
-    Serial.println(_enc_count);
+    // Serial.println(_enc_count);
 }
 void UserInterface::button_press(const uint8_t& current_window)
 {
@@ -189,6 +188,5 @@ void UserInterface::button_press(const uint8_t& current_window)
         }
     }
     delayMicroseconds(500);
-    
 }
 

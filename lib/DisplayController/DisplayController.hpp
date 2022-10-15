@@ -62,13 +62,14 @@ class DisplayController
         // uint8_t get_dive_speed();
 
         void set_menu_content(const uint8_t& content);
-        void set_menu_content(const uint8_t& feed_speed, const uint8_t& dive_speed);
+        void set_menu_content(uint8_t* initial_values, uint8_t num_values);
         
         void next_window();
         void previous_window();
         void initialize_display();
         void initialize_display(bool has_init_speeds);
         void update_display();
+        void process_window();
 };
 
 #endif // DISPLAYCONTROLLER_H

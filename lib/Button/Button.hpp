@@ -10,6 +10,8 @@ class Button
     uint16_t _state;
   public:
     void begin(uint8_t pin);
+    void begin(uint8_t pin, bool pull_up);
     bool debounce();
+    bool debounce_l();
 };
 #endif // BUTTON_H
