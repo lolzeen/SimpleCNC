@@ -34,14 +34,13 @@ void MotorController::io_setup(const DriverPins &pins)
     _driver_pins = pins;
     _end_switch1.begin(_driver_pins._ES1, true);
     _end_switch2.begin(_driver_pins._ES2, true);
-    Serial.println("End Switches Pins are set!");
     pinMode(_driver_pins._DIR, OUTPUT);
     pinMode(_driver_pins._EN, OUTPUT);
     set_en_state(LOW);
     pinMode(_driver_pins._STEP, OUTPUT);
     digitalWrite(_driver_pins._STEP, LOW);
     pinMode(_driver_pins._OUT, INPUT);
-    Serial.println("Driver Pins are set!");
+
 }
 
 void MotorController::set_process()
@@ -211,7 +210,7 @@ void MotorController::cartrige_return()
     {
         set_dir_state(BACKWARD);
     }
-    else
+    else if (_dir_state == BACKWARD)
     {
         set_dir_state(FORWARD);
     }
@@ -235,7 +234,7 @@ void MotorController::cartrige_return()
 }
 void MotorController::end_switch()
 {
-    if(_end_switch1.debounce_l())
+    if(_end_switch1.debounce())
     {
         // home
         if (_dir_state == BACKWARD)
@@ -243,12 +242,12 @@ void MotorController::end_switch()
             set_en_state(LOW);
             cartrige_return();
             set_pos(HOME);
-            // Serial.print("Id: ");
-            // Serial.print(_id);
-            // Serial.println(" endswitch: HOME");
         }
+        Serial.print("Id: ");
+        Serial.print(_id);
+        Serial.println(" endswitch: HOME");
     }
-    if(_end_switch2.debounce_l())
+    if(_end_switch2.debounce())
     {
         // finish
         if (_dir_state == FORWARD)
@@ -256,16 +255,17 @@ void MotorController::end_switch()
             set_en_state(LOW);
             cartrige_return();
             set_pos(FINISH);
-            // Serial.print("Id: ");
-            // Serial.print(_id);
-            // Serial.println(" endswitch: FINISH");
-        }   
+        }
+        Serial.print("Id: ");
+        Serial.print(_id);
+        Serial.println(" endswitch: FINISH");
     }
     
 }
 void MotorController::verify_distance()
 {
     // how
+    // count pulses / get tach signal from driver
 }
 void MotorController::run()
 {

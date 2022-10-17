@@ -121,7 +121,7 @@ const int8_t UserInterface::get_enc_count()
 }
 void UserInterface::read_enc_values()
 {
-    delayMicroseconds(90); // previous setting 100
+    delayMicroseconds(100); // previous setting 100
     uint8_t state = (digitalRead(_input_pins.encoder_a) << 1 | digitalRead(_input_pins.encoder_b));
     static uint8_t start_byte[2];
     if (state >= 2)
@@ -150,7 +150,7 @@ void UserInterface::read_enc_values()
     {
         _enc_count = -1;
     }
-    // Serial.println(_enc_count);
+    Serial.println(_enc_count);
 }
 void UserInterface::button_press(const uint8_t& current_window)
 {

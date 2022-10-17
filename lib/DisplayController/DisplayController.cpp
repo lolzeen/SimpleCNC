@@ -17,48 +17,50 @@ DisplayController::~DisplayController()
 }
 void DisplayController::update_display()
 {
-    if (_current_window > _num_windows - 1)
+    if (_current_window > NUM_CASES - 1)
     {
         _current_window = 0;
     }
     else if (_current_window < 0)
     {
-        _current_window = _num_windows - 1;
+        _current_window = NUM_CASES - 1;
     }
-    switch (get_current_window())
-    {
-        case 0:
-            _lcd.clear();
-            _lcd.print(_content_menus[0][0]);
-            _lcd.setCursor(0, 1);
-            _lcd.print(_content_menus[0][1]);
-            break;
-        case 1:
-            _lcd.clear();
-            _lcd.print(_content_menus[1][0]);
-            _lcd.setCursor(0, 1);
-            _lcd.print(_content_menus[1][1]);
-            break; 
-        case 2:
-            _lcd.clear();
-            _lcd.print(_content_menus[2][0]);
-            _lcd.setCursor(0, 1);
-            _lcd.print(_content_menus[2][1]);
-            break;
-        case 3:
-            _lcd.clear();
-            _lcd.print(_content_menus[3][0]);
-            _lcd.setCursor(0, 1);
-            _lcd.print(_content_menus[3][1]);
-            break;
-        case 4:
-            _lcd.clear();
-            _lcd.print(_content_menus[4][0]);
-            _lcd.setCursor(0, 1);
-            _lcd.print(_content_menus[4][1]);
-        default:
-            break;
-    }
+        #if NUM_CASES == 5
+            switch (get_current_window())
+            {
+                case 0:
+                    _lcd.clear();
+                    _lcd.print(_content_menus[0][0]);
+                    _lcd.setCursor(0, 1);
+                    _lcd.print(_content_menus[0][1]);
+                    break;
+                case 1:
+                    _lcd.clear();
+                    _lcd.print(_content_menus[1][0]);
+                    _lcd.setCursor(0, 1);
+                    _lcd.print(_content_menus[1][1]);
+                    break; 
+                case 2:
+                    _lcd.clear();
+                    _lcd.print(_content_menus[2][0]);
+                    _lcd.setCursor(0, 1);
+                    _lcd.print(_content_menus[2][1]);
+                    break;
+                case 3:
+                    _lcd.clear();
+                    _lcd.print(_content_menus[3][0]);
+                    _lcd.setCursor(0, 1);
+                    _lcd.print(_content_menus[3][1]);
+                    break;
+                case 4:
+                    _lcd.clear();
+                    _lcd.print(_content_menus[4][0]);
+                    _lcd.setCursor(0, 1);
+                    _lcd.print(_content_menus[4][1]);
+                default:
+                    break;
+            }
+        #endif
     // Serial.println("Display Updated");
 }
 void DisplayController::set_current_window(uint8_t new_window)
@@ -118,7 +120,7 @@ void DisplayController::set_menu_content(uint8_t* values, uint8_t num_values)
     }
     
 }
-void DisplayController::process_window()
+void DisplayController::countdown_window()
 {
     for (int i = 5; i > 0 ; i--)
     {
@@ -129,6 +131,9 @@ void DisplayController::process_window()
         _lcd.print("s");
         delay(1000);
     }
+}
+void DisplayController::process_window()
+{
     _lcd.clear();
     _lcd.setCursor(0,0);
     _lcd.print("Executando");

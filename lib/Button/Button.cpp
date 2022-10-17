@@ -5,6 +5,7 @@ void Button::begin(uint8_t pin)
     _btn_pin = pin;
     _state = 0;
     pinMode(_btn_pin, INPUT);
+    // set_last_debounce(0);
 }
 void Button::begin(uint8_t pin, bool pull_up)
 {
@@ -14,6 +15,7 @@ void Button::begin(uint8_t pin, bool pull_up)
         pinMode(_btn_pin, INPUT_PULLUP);
     else
         begin(pin);
+    // set_last_debounce(0);
 }
 bool Button::debounce()
 {
@@ -22,18 +24,19 @@ bool Button::debounce()
 }
 bool Button::debounce_l()
 {
-    if (digitalRead(_btn_pin))
+    if (digitalRead(_btn_pin) && (_last_debounce < 200 + millis() || _last_debounce == 0))
     {
         // Serial.println(digitalRead(_btn_pin));
-        delayMicroseconds(10);
+        delayMicroseconds(20);
         if (digitalRead(_btn_pin))
         {
-            delayMicroseconds(5);
-            if (digitalRead(_btn_pin))
-            {
-                return true;
-            }
+            set_last_debounce(millis());
+            return true;
         }
     }
     return false;
+}
+void Button::set_last_debounce(unsigned long last_db)
+{
+    _last_debounce = last_db;
 }

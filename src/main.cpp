@@ -1,11 +1,14 @@
+#define VERBOSE_ 1
 #include <Arduino.h>
 #include "MotorController.hpp"
 #include "UserInterface.hpp"
 #include "DisplayController.hpp"
-// FIXME when endswitch is activated the opposite axis returns and both stop
+// eixo z não realiza a função return home
+// endswitch 4 home faz o eixo z realizar um cartridge return e depois corre infinito
+// endswithces do eixo z não respondem como deveriam
 /* ----- Driver Pins ----- */
 // azul = EN, verde = DIR, amarelo = STEP
-const int ENX = 38, DIRX = 41, STEPX = 5, ENZ = 32, DIRZ = 35, STEPZ = 6, ESX1 = 20, ESX2 = 21, ESZ1 = 19, ESZ2 = 18, OUTX = 28, OUTZ = 29;
+const int ENX = 23, DIRX = 25, STEPX = 5, ENZ = 29, DIRZ = 27, STEPZ = 6, ESX1 = 20, ESX2 = 21, ESZ1 = 19, ESZ2 = 18, OUTX = 33, OUTZ = 35;
 DriverPins driver_x_pins = {ESX1, ESX2, DIRX, ENX, STEPX, OUTX};
 DriverPins driver_z_pins = {ESZ1, ESZ2,  DIRZ, ENZ, STEPZ, OUTZ};
 
@@ -19,9 +22,9 @@ const uint8_t display_d7 = 8;
 DisplayPins display_pins = {display_rs, display_en, display_d4, display_d5, display_d6, display_d7};
 
 /* ---- Input Pins ----- */
-const uint8_t button = 24;
-const uint8_t encoder_a = 3;
-const uint8_t encoder_b = 25;
+const uint8_t button = 31;
+const uint8_t encoder_a = 2; //3;
+const uint8_t encoder_b = 3;// 25;
 InputPins input_pins = {button, encoder_a, encoder_b};
 
 /* ---- Driver Parameters ----- */
@@ -105,6 +108,7 @@ void loop ()
     }
     if (interface.get_init_process())
     {
+        display.countdown_window();
         display.process_window();
         eixo_x.start_process();
         eixo_z.start_process();
@@ -112,9 +116,17 @@ void loop ()
     }
     if (interface.get_return_home())
     {
+        display.process_window();
         eixo_x.return_home();
+        delay(200);
         eixo_z.return_home();
         interface.set_return_home(false);
     }
+    // FIXME: 
+    // if (!eixo_x.get_en_state() && !eixo_z.get_en_state())
+    // {
+    //     display.set_current_window(0);
+    //     display.update_display();
+    // } 
     // Serial.println("..");
 }

@@ -1,5 +1,5 @@
-#ifndef HARDWARE_W
-#define HARDWARE_W
+#ifndef MOTORCONTROLLER_H
+#define MOTORCONTROLLER_H
 
 #include <Arduino.h>
 
@@ -58,8 +58,7 @@ class MotorController
 
         DriverPins _driver_pins;
         Button _end_switch1, _end_switch2;
-       
-        // uint64_t calc_num_pulses();
+
         void io_setup(const DriverPins &pins);
         void set_process();
         void set_process(uint8_t mode);
@@ -67,7 +66,6 @@ class MotorController
         void calc_freq();
         void calc_freq(const int pot_val);
         void calc_ocr();
-        // uint8_t conv_pot_speed(const int pot_reading);
 
     public:
         MotorController();
@@ -111,4 +109,4 @@ class MotorController
         // IMPROVEMENT void set_units(char* dist_unit, char* time_unit);
     
 };
-#endif // HARDWARE_W
+#endif // MOTORCONTROLLER_H

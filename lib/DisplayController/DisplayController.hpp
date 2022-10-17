@@ -39,37 +39,64 @@ struct DisplayPins
 class DisplayController 
 {
     private:
-        const uint8_t display_rs = 13;
-        const uint8_t display_en = 12;
-        const uint8_t display_d4 = 11;
-        const uint8_t display_d5 = 10;
-        const uint8_t display_d6 = 9;
-        const uint8_t display_d7 = 8; 
-        LiquidCrystal _lcd = LiquidCrystal(display_rs, display_en, display_d4, display_d5, display_d6, display_d7);
+        // delay before process start in seconds
+        #ifndef PROCESS_START_DELAY
+            #define PROCESS_START_DELAY 5
+        #endif
+        #ifndef DISPLAY_RS
+            #define DISPLAY_RS 13
+        #endif
+        #ifndef DISPLAY_EN
+            #define DISPLAY_EN 12
+        #endif
+        #ifndef DISPLAY_D4
+            #define DISPLAY_D4 11
+        #endif
+        #ifndef DISPLAY_D5
+            #define DISPLAY_D5 10
+        #endif
+        #ifndef DISPLAY_D6
+            #define DISPLAY_D6 9
+        #endif
+        #ifndef DISPLAY_D7
+            #define DISPLAY_D7 8
+        #endif
+        LiquidCrystal _lcd = LiquidCrystal(DISPLAY_RS, DISPLAY_EN, DISPLAY_D4, DISPLAY_D5, DISPLAY_D6, DISPLAY_D7);
 
-        static const uint8_t _num_windows = 4;
+        #ifndef NUM_CASES
+            #define NUM_CASES 5
+            #define CASE0 "Iniciar Processo"
+            #define CASE1 "Retornar"
+            #define CASE2 "Vel. Avanço"
+            #define CASE3 "Vel. Mergulho"
+            #define CASE4 "Temp. Decorri."
+            String _content_menus[NUM_CASES][2] = {{CASE0, ""}, {CASE1, ""}, {CASE2, " cm/min"}, {CASE3, " cm/min"}, {CASE4, " s"}};
+        #endif
         int _current_window = 0;
-        void set_current_window(uint8_t new_window);
+        
 
-        String _content_menus[_num_windows][2] = {{"Iniciar Processo", ""}, {"Retornar", ""}, {"Vel. Avanco", "0 cm/min"}, {"Vel. Mergulho", "0 cm/min"}};
+        // String _content_menus[NUM_CASES][2] = {{"Iniciar Processo", ""}, {"Retornar", ""}, {"Vel. Avanco", "0 cm/min"}, {"Vel. Mergulho", "0 cm/min"}};
         // uint16_t dive_speed;
         
     public:
         DisplayController();
         DisplayController(const uint8_t& feed_speed, const uint8_t& dive_speed);
+        DisplayController(const uint8_t& feed_speed, const uint8_t& dive_speed, const uint8_t process_start_delay);
         ~DisplayController();
         int get_current_window();
         // uint8_t get_dive_speed();
 
         void set_menu_content(const uint8_t& content);
         void set_menu_content(uint8_t* initial_values, uint8_t num_values);
-        
+        void set_current_window(uint8_t new_window);
+
         void next_window();
         void previous_window();
         void initialize_display();
         void initialize_display(bool has_init_speeds);
         void update_display();
         void process_window();
+        void countdown_window();
 };
 
 #endif // DISPLAYCONTROLLER_H
