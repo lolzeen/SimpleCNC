@@ -1,7 +1,6 @@
 #define VERBOSE_ 1
 #include <Arduino.h>
 #include "MotorController.hpp"
-#include "UserInterface.hpp"
 #include "DisplayController.hpp"
 // eixo z não realiza a função return home
 // endswitch 4 home faz o eixo z realizar um cartridge return e depois corre infinito
@@ -33,10 +32,10 @@ const uint8_t EIXO_X_ID = 3;
 const uint8_t EIXO_Z_ID = 4;
 const uint8_t EIXO_X_DIS = 34;
 const uint8_t EIXO_Z_DIS = 33;
+const uint8_t CORRECT_HEIGHT = 1;
 MotorController eixo_x(driver_x_pins, driver_params, EIXO_X_ID, EIXO_X_DIS);
 MotorController eixo_z(driver_z_pins, driver_params, EIXO_Z_ID, EIXO_Z_DIS);
-UserInterface interface(input_pins);
-DisplayController display;
+DisplayController display(input_pins);
 
 bool isrx_home_flag = false;
 bool isrx_finish_flag = false;
@@ -49,7 +48,7 @@ int8_t enc_count = 0;
 void isr_encoder()
 {
     // Serial.println("isr_encoder");
-    interface.read_enc_values();
+    display.read_enc_values();
     isr_enc_flag = true;
 }
 
@@ -62,65 +61,142 @@ void setup ()
 void loop ()
 {
     eixo_x.run();
-    eixo_z.run();
-    interface.button_press(display.get_current_window());
-    if (isr_enc_flag)
+    eixo_z.run(true);
+    display.button_press(false);
+    if (isr_enc_flag) // TODO: 
     {
-        // if (interface.validate_enc_values())
-        if (enc_count != interface.get_enc_count())
+        // if (display.validate_enc_values())
+        if (enc_count != display.get_enc_count())
         {
-            if (!interface.get_adjust_menu())
+            if (!display.get_adjust_menu())
             {
-                if (interface.get_enc_direction() == 1)
+                Serial.println("Current window: "+String(display.get_current_window()));
+                if (display.get_enc_direction() == 1) display.next_window();
+                else if (display.get_enc_direction() == -1) display.previous_window();
+            }
+            else
+            {
+                while (display.get_adjust_menu())
                 {
-                    display.next_window();
-                    // Serial.println("Display next window");
-                }
-                else if (interface.get_enc_direction() == -1)
-                {
-                    display.previous_window();
-                    // Serial.println("Display previous window");
+                    if (enc_count != display.get_enc_count())
+                    {
+                        switch (display.get_current_window())
+                        {
+                        case POS_EDIT_HORIZONTAL:
+                            eixo_x.set_dir_state(FORWARD);
+                            eixo_x.set_speed(10);
+                            eixo_x.set_timer_speed();
+                            while (display.get_adjust_menu())
+                            {
+                                display.set_menu_content(POS_EDIT_HORIZONTAL, String(eixo_x.get_speed()));
+                                if (eixo_x.end_switch())
+                                {
+                                    display.set_adjust_menu(false);
+                                    break;
+                                }
+                                if (display.get_enc_direction() == 1)
+                                {
+                                    eixo_x.set_speed(eixo_x.get_speed()+10);
+                                }
+                                else if(display.get_enc_direction() == -1)
+                                {
+                                    eixo_x.set_speed(eixo_x.get_speed()-10);
+                                    if (eixo_x.get_speed() < 0)
+                                    {
+                                        eixo_x.set_speed(10);
+                                        eixo_x.set_dir_state(!eixo_x.get_dir_state());
+                                        eixo_x.set_timer_speed();
+                                    }
+                                    else
+                                    {
+                                        display.set_adjust_menu(false);
+                                        break;
+                                    }
+                                }
+                                display.button_press();
+                            }
+                            break;
+                        case POS_EDIT_VERTICAL:
+                            eixo_z.set_dir_state(FORWARD);
+                            eixo_z.set_speed(10);
+                            eixo_z.set_timer_speed();
+                            while (display.get_adjust_menu())
+                            {
+                                display.set_menu_content(POS_EDIT_VERTICAL, String(eixo_z.get_speed()));
+                                if (eixo_z.end_switch())
+                                {
+                                    display.set_adjust_menu(false);
+                                    break;
+                                }
+                                if (display.get_enc_direction() == 1)
+                                {
+                                    eixo_z.set_speed(eixo_z.get_speed()+10);
+                                }
+                                else if(display.get_enc_direction() == -1)
+                                {
+                                    eixo_z.set_speed(eixo_z.get_speed()-10);
+                                    if (eixo_z.get_speed() < 0)
+                                    {
+                                        eixo_z.set_speed(10);
+                                        eixo_z.set_dir_state(!eixo_z.get_dir_state());
+                                        eixo_z.set_timer_speed();
+                                    }
+                                    else
+                                    {
+                                        display.set_adjust_menu(false);
+                                        break;
+                                    }
+                                }
+                                display.button_press();
+                            }
+                            break;
+                        case SPEED_EDIT_HORIZONTAL:
+                            eixo_x.set_speed(eixo_x.get_speed() + display.get_enc_direction());
+                            display.set_menu_content(SPEED_EDIT_HORIZONTAL, String(eixo_x.get_speed()));
+                            break;
+                        case SPEED_EDIT_VERTICAL:
+                            eixo_z.set_speed(eixo_z.get_speed() + display.get_enc_direction());
+                            display.set_menu_content(SPEED_EDIT_VERTICAL, String(eixo_z.get_speed()));
+                            break;
+                        case ARC_GAIN_EDIT:
+                            eixo_z.set_arc_controller_gain(eixo_z.get_arc_controller_gain()+display.get_enc_direction());
+                            display.set_menu_content(eixo_z.get_arc_controller_gain());
+                            break;
+                        case ARC_SHORT_CIRCUIT_VOLTAGE_EDIT:
+                            eixo_z.set_arc_short_circuit_voltage(eixo_z.get_arc_short_circuit_voltage()+display.get_enc_direction());
+                            display.set_menu_content(eixo_z.get_arc_short_circuit_voltage());
+                            break;
+                        default:
+                            break;
+                        }
+                        display.update_display();
+                        enc_count = display.get_enc_count();
+                    }
+                    display.button_press();
                 }
             }
-            while (interface.get_adjust_menu())
-            {
-                if (enc_count != interface.get_enc_count())
-                {
-                    if (display.get_current_window() == 2)
-                    {
-                        eixo_x.set_speed(eixo_x.get_speed() + interface.get_enc_direction());
-                        display.set_menu_content(eixo_x.get_speed());
-                    }
-                    else if (display.get_current_window() == 3)
-                    {
-                        eixo_z.set_speed(eixo_z.get_speed() + interface.get_enc_direction());
-                        display.set_menu_content(eixo_z.get_speed());
-                    }
-                    display.update_display();
-                    enc_count = interface.get_enc_count();
-                }
-                interface.button_press(display.get_current_window());
-            }
+            
         }
         enc_count = 0;
-        interface.set_enc_count(0);
+        display.set_enc_count(0);
         isr_enc_flag = false;
     }
-    if (interface.get_init_process())
+    if (display.get_init_process())
     {
         display.countdown_window();
         display.process_window();
         eixo_x.start_process();
-        eixo_z.start_process();
-        interface.set_init_process(false);
+        eixo_z.start_process(CORRECT_HEIGHT);
+        // eixo_z.change_speed_while_running();
+        display.set_init_process(false);
     }
-    if (interface.get_return_home())
+    if (display.get_return_home())
     {
         display.process_window();
         eixo_x.return_home();
         delay(200);
         eixo_z.return_home();
-        interface.set_return_home(false);
+        display.set_return_home(false);
     }
     // FIXME: 
     // if (!eixo_x.get_en_state() && !eixo_z.get_en_state())

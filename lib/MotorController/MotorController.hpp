@@ -51,10 +51,16 @@ class MotorController
         uint8_t _max_distance; // cm
         uint8_t _distance; // cm
         float _time; // min
-        float _speed; // cm/min
+        uint8_t _speed; // cm/min
         uint16_t _ocr; 
         uint16_t _pulses_per_rev;
         uint8_t _id; // timer identifier
+        uint16_t _arc_voltage;
+        uint16_t _last_arc_voltage;
+        uint8_t _arc_controller_gain = 0;
+        uint8_t _welding_voltage = 0;
+        uint8_t _short_circuit_voltage = 0;
+        uint8_t _voltage_tolerance = 0;
 
         DriverPins _driver_pins;
         Button _end_switch1, _end_switch2;
@@ -63,9 +69,14 @@ class MotorController
         void set_process();
         void set_process(uint8_t mode);
         void set_timers();
+        void stop_timers();
         void calc_freq();
         void calc_freq(const int pot_val);
         void calc_ocr();
+        void cartrige_return();
+        void end_switch(bool activate_cartrige_return);
+        void verify_distance();
+        
 
     public:
         MotorController();
@@ -86,6 +97,10 @@ class MotorController
         void set_num_pulses(const uint64_t num); // TODO: review usability
         void set_last_pos(const uint8_t pos);  // TODO: review usability
         void set_pos(uint8_t pos); // TODO: find better name for this function  // TODO: review usability
+        void set_arc_controller_gain(uint8_t gain);
+        void set_welding_voltage(uint8_t voltage);
+        void set_arc_short_circuit_voltage(uint8_t voltage);
+        void set_voltage_tolerance(uint8_t voltage);
 
         const uint8_t get_dir_state();
         const uint8_t get_en_state();
@@ -96,15 +111,21 @@ class MotorController
         const uint8_t get_speed();
         const uint16_t get_ocr();
         const uint8_t get_pos();
+        const uint8_t get_arc_controller_gain();
+        const uint8_t get_welding_voltage();
+        const uint8_t get_arc_short_circuit_voltage();
+        const uint8_t get_voltage_tolerance();
+
         void return_home();
         void start_process();
         void start_process(uint8_t mode);
-        void stop_timers();
-
-        void cartrige_return();
-        void end_switch();
-        void verify_distance();
+        bool end_switch();
+        void set_timer_speed();
+        void read_voltage();
+        void correct_height();
         void run();
+        void run(bool activate_correct_height);
+        // void change_speed_while_running();
         
         // IMPROVEMENT void set_units(char* dist_unit, char* time_unit);
     
