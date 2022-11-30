@@ -55,77 +55,81 @@ class MotorController
         uint16_t _ocr; 
         uint16_t _pulses_per_rev;
         uint8_t _id; // timer identifier
-        uint16_t _arc_voltage;
+        uint16_t _arc_voltage = 0;
         uint16_t _last_arc_voltage;
         uint8_t _arc_controller_gain = 0;
         uint8_t _welding_voltage = 0;
         uint8_t _short_circuit_voltage = 0;
         uint8_t _voltage_tolerance = 0;
+        uint8_t _delay_init_forward_move = 0; // milliseconds
+        bool _close_arc = false;
 
         DriverPins _driver_pins;
         Button _end_switch1, _end_switch2;
 
-        void io_setup(const DriverPins &pins);
-        void set_process();
-        void set_process(uint8_t mode);
-        void set_timers();
-        void stop_timers();
         void calc_freq();
         void calc_freq(const int pot_val);
         void calc_ocr();
         void cartrige_return();
+        void correct_height();
         void end_switch(bool activate_cartrige_return);
+        void io_setup(const DriverPins &pins);
+        double map(uint16_t val);
+        void open_arc();
+        void read_voltage();
+        void set_process();
+        void set_process(uint8_t mode);
+        void set_timers();
+        void stop_timers();
         void verify_distance();
-        
 
     public:
         MotorController();
         MotorController(const DriverPins &pins);
         MotorController(const DriverPins &pins, const uint16_t &driver_pul_rev, const uint8_t &id, uint8_t dis);
         ~MotorController();
+        
+        void set_distance(const uint8_t dist) {_distance = dist;};
+        void set_max_distance(const uint8_t dist) {_max_distance = dist;};
+        void set_time(const uint8_t time) {_time = time;};
+        void set_speed(const uint8_t speed) {_speed = speed;};
+        void set_ocr(const uint16_t ocr_top) {_ocr = ocr_top;};
+        void set_freq(const long freq) {_frequency = freq;}; // TODO: review usability
+        void set_num_pulses(const uint64_t num) {_num_pulses = num;}; // TODO: review usability
+        void set_last_pos(const uint8_t pos) {_last_pos = pos;};  // TODO: review usability
+        void set_pos(uint8_t pos) {set_last_pos(pos);}; // TODO: find better name for this function  // TODO: review usability
+        void set_arc_controller_gain(uint8_t gain) {_arc_controller_gain = gain;};
+        void set_welding_voltage(uint8_t voltage) {_welding_voltage = voltage;};
+        void set_arc_short_circuit_voltage(uint8_t voltage) {_short_circuit_voltage = voltage;};
+        void set_voltage_tolerance(uint8_t voltage) {_voltage_tolerance = voltage;};
+        void set_delay_init_forward_move(uint8_t ms) {_delay_init_forward_move = ms;};
+        void set_close_arc(bool val) {_close_arc = val;};
 
-        bool move = false;
+        const uint8_t get_dir_state() {return _dir_state;};
+        const uint8_t get_en_state() {return _en_state;};
+        const long get_freq() {return _frequency;};
+        const uint8_t get_distance() {return _distance;};
+        const uint8_t get_max_distance() {return _max_distance;};
+        const uint8_t get_time() {return _time;};
+        const uint8_t get_speed() {return _speed;};
+        const uint16_t get_ocr() {return _ocr;};
+        const uint8_t get_pos() {return _last_pos;};
+        const uint8_t get_arc_controller_gain() {return _arc_controller_gain;};
+        const uint8_t get_welding_voltage() {return _welding_voltage;};
+        const uint8_t get_arc_short_circuit_voltage() {return _short_circuit_voltage;};
+        const uint8_t get_voltage_tolerance() {return _voltage_tolerance;};
+        const uint8_t get_delay_init_forward_move() {return _delay_init_forward_move;};
+        const bool get_close_arc() {return _close_arc;};
 
+        void close_arc();
+        void return_home();
         void set_dir_state(const uint8_t state);
         void set_en_state(const uint8_t  state);
-        void set_distance(const uint8_t dist);
-        void set_max_distance(const uint8_t dist);
-        void set_time(const uint8_t time);
-        void set_speed(const uint8_t speed);
-        void set_ocr(const uint16_t ocr_top);
-        void set_freq(const long freq); // TODO: review usability
-        void set_num_pulses(const uint64_t num); // TODO: review usability
-        void set_last_pos(const uint8_t pos);  // TODO: review usability
-        void set_pos(uint8_t pos); // TODO: find better name for this function  // TODO: review usability
-        void set_arc_controller_gain(uint8_t gain);
-        void set_welding_voltage(uint8_t voltage);
-        void set_arc_short_circuit_voltage(uint8_t voltage);
-        void set_voltage_tolerance(uint8_t voltage);
-
-        const uint8_t get_dir_state();
-        const uint8_t get_en_state();
-        const long get_freq();
-        const uint8_t get_distance();
-        const uint8_t get_max_distance();
-        const uint8_t get_time();
-        const uint8_t get_speed();
-        const uint16_t get_ocr();
-        const uint8_t get_pos();
-        const uint8_t get_arc_controller_gain();
-        const uint8_t get_welding_voltage();
-        const uint8_t get_arc_short_circuit_voltage();
-        const uint8_t get_voltage_tolerance();
-
-        void return_home();
+        void set_timer_speed();
         void start_process();
         void start_process(uint8_t mode);
-        bool end_switch();
-        void set_timer_speed();
-        void read_voltage();
-        void correct_height();
         void run();
         void run(bool activate_correct_height);
-        // void change_speed_while_running();
         
         // IMPROVEMENT void set_units(char* dist_unit, char* time_unit);
     

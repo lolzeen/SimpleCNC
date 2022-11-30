@@ -1,6 +1,5 @@
 #include "MotorController.hpp"
 
-
 MotorController::MotorController()
 {
     // Intentionally Empty;
@@ -11,12 +10,6 @@ MotorController::MotorController(const DriverPins &pins)
     _pulses_per_rev =  20000;
     set_en_state(LOW);
 }
-// MotorController::MotorController(const DriverPins &pins, const DriverParameters &params_driver)
-// {
-//     io_setup(pins);
-//     _pulses_per_rev = params_driver._pulses_per_rev;
-//     set_en_state(LOW);
-// }
 MotorController::MotorController(const DriverPins &pins, const uint16_t &driver_pul_rev, const uint8_t &id, uint8_t dis)
 {
     io_setup(pins);
@@ -28,6 +21,102 @@ MotorController::~MotorController()
 {
     // Intentionally Empty;
     // IMPROVEMENT: write settings on memory before turning off
+}
+
+void MotorController::calc_freq()
+{
+    // FIXME
+    _frequency = 2*_speed*(_pulses_per_rev/0.008)/(60*100);
+    // Serial.print("Freq: ");
+    // Serial.println(_frequency);
+}
+void MotorController::calc_ocr()
+{
+    uint16_t ocr = 8e6 / _frequency;
+    if (ocr <= 65535 && ocr > 0) 
+        _ocr =  ocr;
+}
+void MotorController::cartrige_return()
+{
+    // FIXME
+    Serial.println("Cartrige Return");
+    if (_dir_state == FORWARD)
+    {
+        set_dir_state(BACKWARD);
+    }
+    else if (_dir_state == BACKWARD)
+    {
+        set_dir_state(FORWARD);
+    }
+    set_speed(100*_max_distance/MIN_TIME);
+    set_timer_speed();
+    set_en_state(HIGH);
+    delay(200);
+    set_en_state(LOW);
+}
+void MotorController::close_arc()
+{
+    // TODO recuar o eixo_z 5 cm
+    set_dir_state(BACKWARD);
+    set_speed(100*_max_distance/MIN_TIME);
+    set_timer_speed();
+    set_en_state(HIGH);
+    delay(500);
+    set_en_state(LOW);
+}
+void MotorController::correct_height()
+{
+    read_voltage();
+    int delta = _arc_voltage - _welding_voltage;
+    if (abs(delta) - _voltage_tolerance > 0)
+    {
+        set_speed(abs(delta) * _speed * _arc_controller_gain);
+        set_timer_speed();
+        if (delta < 0)
+        {
+            set_dir_state(BACKWARD);
+        }
+        else
+        {
+            set_dir_state(FORWARD);
+        }
+        set_en_state(HIGH);
+    }
+    else set_en_state(LOW);
+}
+void MotorController::end_switch(bool activate_cartrige_return)
+{
+    if (activate_cartrige_return)
+    {
+        if(_end_switch1.debounce())
+        {
+            // home
+            if (_dir_state == BACKWARD)
+            {
+                set_en_state(LOW);
+                cartrige_return();
+                set_pos(HOME);
+            }
+            // Serial.print("Id: ");
+            // Serial.print(_id);
+            // Serial.println(" endswitch: HOME");
+        }
+        else if(_end_switch2.debounce())
+        {
+            // finish
+            if (_id == 4) close_arc();
+            else if (_dir_state == FORWARD)
+            {
+                set_en_state(LOW);
+                cartrige_return();
+                set_pos(FINISH);
+                set_close_arc(true);
+            }
+            // Serial.print("Id: ");
+            // Serial.print(_id);
+            // Serial.println(" endswitch: FINISH");
+        }
+    }
 }
 void MotorController::io_setup(const DriverPins &pins)
 {
@@ -42,7 +131,66 @@ void MotorController::io_setup(const DriverPins &pins)
     pinMode(_driver_pins._OUT, INPUT);
 
 }
-
+/*
+Compute equivalent voltage based on analoread() value.
+Assuming input values 0-1023 and output 0-60V
+*/
+double MotorController::map(uint16_t val)
+{
+    return val * 0.05865102639296188;
+}
+void MotorController::open_arc()
+{
+    // TODO aproximar até a tensao de curto circuito
+    while (_arc_voltage < _short_circuit_voltage - _voltage_tolerance)
+    {
+        delay(50);
+        read_voltage();
+    }
+    set_dir_state(BACKWARD);
+}
+void MotorController::read_voltage()
+{
+    // times five because DIGITEC450 outputs 1V for 5V
+    _arc_voltage = map(analogRead(A0)) * 5;
+}
+void MotorController::return_home()
+{
+    if (!_en_state)
+    {
+        
+        set_max_distance(_max_distance);
+        set_dir_state(BACKWARD);
+        set_time(MIN_TIME*2); // previous setting MIN_TIME*8
+        set_speed(100*_max_distance/MIN_TIME);
+        set_process();
+        set_en_state(HIGH);
+    }
+    // tone(_driver_pins._STEP, 15000);  
+}
+void MotorController::run()
+{
+    end_switch(true);
+    verify_distance();
+}
+void MotorController::run(bool activate_correct_height)
+{
+    run();
+    if (activate_correct_height)
+    {
+        correct_height();
+    }
+}
+void MotorController::set_dir_state(const uint8_t state)
+{
+    _dir_state = state;
+    digitalWrite(_driver_pins._DIR, _dir_state);
+}
+void MotorController::set_en_state(const uint8_t  state)
+{
+    _en_state = state;
+    digitalWrite(_driver_pins._EN, _en_state);
+}
 void MotorController::set_process()
 {
     set_distance(0);
@@ -71,6 +219,38 @@ void MotorController::set_timers()
     }
     interrupts();
 }
+void MotorController::set_timer_speed()
+{
+    calc_freq();
+    calc_ocr();
+    switch (_id)
+    {
+    case 4:
+        OCR4A = _ocr;
+        break;
+    case 3:
+        OCR3A = _ocr;
+        break;
+    default:
+        break;
+    }
+}
+void MotorController::start_process()
+{
+    if (!_en_state)
+    {
+        set_max_distance(_max_distance);
+        set_process();
+        set_dir_state(FORWARD);
+        if (_id == 3) delay(_delay_init_forward_move);
+        set_en_state(HIGH);
+        if (_id == 4) open_arc();
+    }
+}
+void MotorController::start_process(uint8_t mode)
+{
+    start_process();
+}
 void MotorController::stop_timers()
 {
     noInterrupts();
@@ -94,315 +274,11 @@ void MotorController::stop_timers()
     }
     interrupts();
 }
-void MotorController::start_process()
-{
-    if (!_en_state)
-    {
-        set_max_distance(_max_distance);
-        set_process();
-        set_dir_state(FORWARD);
-        set_en_state(HIGH);
-    }
-}
-void MotorController::start_process(uint8_t mode)
-{
-    start_process();
-}
-void MotorController::return_home()
-{
-    if (!_en_state)
-    {
-        
-        set_max_distance(_max_distance);
-        set_dir_state(BACKWARD);
-        set_time(MIN_TIME*2); // previous setting MIN_TIME*8
-        set_speed(100*_max_distance/MIN_TIME);
-        set_process();
-        set_en_state(HIGH);
-    }
-    // tone(_driver_pins._STEP, 15000);  
-}
-
-void MotorController::set_last_pos(const uint8_t pos)
-{
-    _last_pos = pos;
-}
-void MotorController::set_dir_state(const uint8_t state)
-{
-    _dir_state = state;
-    digitalWrite(_driver_pins._DIR, _dir_state);
-}
-void MotorController::set_en_state(const uint8_t  state)
-{
-    _en_state = state;
-    digitalWrite(_driver_pins._EN, _en_state);
-}
-void MotorController::set_freq(const long freq)
-{
-    _frequency = freq;
-    // Serial.print("set Freq: ");
-    // Serial.println(freq);
-}
-void MotorController::set_num_pulses(const uint64_t num)
-{
-    _num_pulses = num;
-}
-void MotorController::set_distance(const uint8_t dist)
-{
-    _distance = dist;
-}
-void MotorController::set_max_distance(const uint8_t max_dist)
-{
-    _max_distance = max_dist;
-}
-void MotorController::set_time(const uint8_t time)
-{
-    _time = time;
-}
-void MotorController::set_speed(const uint8_t speed)
-{
-    _speed = speed;
-}
-void MotorController::set_pos(uint8_t pos)
-{
-    // change_en_state(LOW);
-    set_last_pos(pos);
-}
-void MotorController::set_ocr(const uint16_t ocr_top)
-{
-    _ocr = ocr_top;
-}
-void MotorController::set_timer_speed()
-{
-    calc_freq();
-    calc_ocr();
-    // OCR = _ocr;
-    switch (_id)
-    {
-    case 4:
-        OCR4A = _ocr;
-        break;
-    case 3:
-        OCR3A = _ocr;
-        break;
-    default:
-        break;
-    }
-}
-void MotorController::set_arc_controller_gain(uint8_t gain)
-{
-    _arc_controller_gain = gain;
-}
-void MotorController::set_welding_voltage(uint8_t voltage)
-{
-    _welding_voltage = voltage;
-}
-void MotorController::set_arc_short_circuit_voltage(uint8_t voltage)
-{
-    _short_circuit_voltage = voltage;
-}
-void MotorController::set_voltage_tolerance(uint8_t voltage)
-{
-    _voltage_tolerance = voltage;
-}
-
-const uint8_t MotorController::get_dir_state()
-{
-    return _dir_state;
-}
-const uint8_t MotorController::get_en_state()
-{
-    return _en_state;
-}
-const long MotorController::get_freq()
-{
-    return _frequency;
-}
-const uint8_t MotorController::get_distance()
-{
-    return _distance;
-}
-const uint8_t MotorController::get_max_distance()
-{
-    return _max_distance;
-}
-const uint8_t MotorController::get_time()
-{
-    return _time;
-}
-const uint8_t MotorController::get_speed()
-{
-    return _speed;
-}
-const uint16_t MotorController::get_ocr()
-{
-    return _ocr;
-}
-const uint8_t MotorController::get_pos()
-{
-    return _last_pos;
-}
-const uint8_t MotorController::get_arc_short_circuit_voltage()
-{
-    return _short_circuit_voltage;
-}
-const uint8_t MotorController::get_arc_controller_gain()
-{
-    return _arc_controller_gain;
-}
-const uint8_t MotorController::get_welding_voltage()
-{
-    return _welding_voltage;
-}
-const uint8_t MotorController::get_voltage_tolerance()
-{
-    return _voltage_tolerance;
-}
-
-void MotorController::cartrige_return()
-{
-    // FIXME
-    Serial.println("Cartrige Return");
-    if (_dir_state == FORWARD)
-    {
-        set_dir_state(BACKWARD);
-    }
-    else if (_dir_state == BACKWARD)
-    {
-        set_dir_state(FORWARD);
-    }
-    set_speed(100*_max_distance/MIN_TIME);
-    set_timer_speed();
-    set_en_state(HIGH);
-    delay(200);
-    set_en_state(LOW);
-}
-void MotorController::calc_freq()
-{
-    // FIXME
-    _frequency = 2*_speed*(_pulses_per_rev/0.008)/(60*100);
-    // Serial.print("Freq: ");
-    // Serial.println(_frequency);
-}
-void MotorController::calc_ocr()
-{
-    uint16_t ocr = 8e6 / _frequency;
-    if (ocr <= 65535 && ocr > 0) 
-        _ocr =  ocr;
-}
-void MotorController::correct_height()
-{
-    read_voltage();
-    int delta = _arc_voltage - _last_arc_voltage;
-    if (abs(delta) > 0)
-    {
-        set_speed(abs(delta) * _speed * _arc_controller_gain);
-        set_timer_speed();
-        if (delta < 0)
-        {
-            set_dir_state(BACKWARD);
-        }
-        else
-        {
-            set_dir_state(FORWARD);
-        }
-    }
-    _last_arc_voltage = _arc_voltage;
-}
-void MotorController::end_switch(bool activate_cartrige_return)
-{
-    if (activate_cartrige_return)
-    {
-        if(_end_switch1.debounce())
-        {
-            // home
-            if (_dir_state == BACKWARD)
-            {
-                set_en_state(LOW);
-                cartrige_return();
-                set_pos(HOME);
-            }
-            // Serial.print("Id: ");
-            // Serial.print(_id);
-            // Serial.println(" endswitch: HOME");
-        }
-        else if(_end_switch2.debounce())
-        {
-            // finish
-            if (_dir_state == FORWARD)
-            {
-                set_en_state(LOW);
-                cartrige_return();
-                set_pos(FINISH);
-            }
-            // Serial.print("Id: ");
-            // Serial.print(_id);
-            // Serial.println(" endswitch: FINISH");
-        }
-    }
-}
-bool MotorController::end_switch()
-{
-    if(_end_switch1.debounce())
-    {
-        // home
-        if (_dir_state == BACKWARD)
-        {
-            set_en_state(LOW);
-            set_pos(HOME);
-            return true;
-        }
-    }
-    else if(_end_switch2.debounce())
-    {
-        // finish
-        if (_dir_state == FORWARD)
-        {
-            set_en_state(LOW);
-            set_pos(FINISH);
-            return true;
-        }
-    }
-    return false;
-}
-void MotorController::read_voltage()
-{
-    _arc_voltage = analogRead(A0);
-}
-void MotorController::run()
-{
-    end_switch();
-    verify_distance();
-}
-void MotorController::run(bool activate_correct_height)
-{
-    end_switch();
-    verify_distance();
-    if (activate_correct_height)
-    {
-        correct_height();
-    }
-}
 void MotorController::verify_distance()
 {
     // how
     // count pulses / get tach signal from driver
 }
-// void MotorController::change_speed_while_running()
-// {
-//     delay(200);
-//     for (int i = 0; i < 20; i ++)
-//     {
-//         if(i%2 == 0)
-//         {
-//             set_dir_state(!_dir_state);
-//         }
-//         set_speed(10*i);
-//         calc_freq();
-//         calc_ocr();
-//         delay(250);
-//     }
-// }
 /* IMPROVEMENT
 void set_units(char* dist_unit, char* time_unit)
 {
