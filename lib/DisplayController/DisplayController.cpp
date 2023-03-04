@@ -21,7 +21,7 @@ DisplayController::DisplayController(const InputPins& in_pins) : _input_pins(in_
 {
     constructor();
 }
-DisplayController::DisplayController(MemoryController<int16_t> memoryController, const InputPins& in_pins): _input_pins(in_pins),  MEMORY_CONTROLLER(memoryController) {
+DisplayController::DisplayController(MemoryController memoryController, const InputPins& in_pins): _input_pins(in_pins),  MEMORY_CONTROLLER(memoryController) {
     constructor();
 }
 DisplayController::~DisplayController()
@@ -224,6 +224,10 @@ void DisplayController::processButtonInput()
             case 22: case 305: case 312:
                 currentWindow /= 10;
                 updateDisplay();
+                break;
+            case SAVE_SETTINGS:
+                MEMORY_CONTROLLER.updateEepromFromWeldingParameters();
+                // EEPROM.put(MEMORY_ADDRESS.SHORT_CIRCUIT_VOLTAGE_ADDR, MEMORY_CONTROLLER.getShortCircuitVoltage());
                 break;
             default:
                 if (currentWindow == 200 ||

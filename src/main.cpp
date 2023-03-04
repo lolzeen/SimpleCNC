@@ -2,11 +2,10 @@
 // TODO: extinguir arco antes do soltar o endswitch (colocar o endswitch mais para frente e acionar o fechamento do arco antes de releaseEndSwitch)
 // TODO: atualizar display quando enswitch for acionado
 
-MemoryController<int16_t> MEMORY_CONTROLLER;
+MemoryController MEMORY_CONTROLLER;
 MotorController eixo_x(driver_x_pins, driver_params, EIXO_X_ID, EIXO_X_DIS);
 MotorController eixo_z(driver_z_pins, driver_params, EIXO_Z_ID, EIXO_Z_DIS);
 DisplayController display(MEMORY_CONTROLLER, input_pins);
-
 
 int16_t enc_count = 0;
 
@@ -149,10 +148,6 @@ void loop ()
                                 MEMORY_CONTROLLER.setDelayInitTravel(MEMORY_CONTROLLER.getDelayInitTravel() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
                                 display.updateDisplay(EDIT_DELAY_INIT_TRAVEL, MEMORY_CONTROLLER.getDelayInitTravel()); // IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
                                 eixo_z.setDelayInitTravel(MEMORY_CONTROLLER.getDelayInitTravel());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
-                                break;
-                            case SAVE_SETTINGS:
-                                MEMORY_CONTROLLER.updateEepromFromWeldingParameters();
-                                // EEPROM.put(MEMORY_ADDRESS.SHORT_CIRCUIT_VOLTAGE_ADDR, MEMORY_CONTROLLER.getShortCircuitVoltage());
                                 break;
                             default:
                                 break;

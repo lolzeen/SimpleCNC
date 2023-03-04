@@ -1,28 +1,20 @@
 #include "MemoryController.hpp"
 
-template <class T>
-MemoryController<T>::MemoryController() {
-    WeldingParameters::arcControllerGain = {ARC_CONTROLLER_GAIN_ADDR, 0};
-    WeldingParameters::shortCircuitVoltage = {SHORT_CIRCUIT_VOLTAGE_ADDR, 0};
-    WeldingParameters::feedSpeed = {FEED_SPEED_ADDR, 0};
-    WeldingParameters::weldingVoltage = {WELDING_VOLTAGE_ADDR, 0};
-    WeldingParameters::voltageTolerance = {VOLTAGE_TOLERANCE_ADDR, 0};
-    WeldingParameters::travelSpeed = {TRAVEL_SPEED_ADDR, 0};
-    WeldingParameters::delayInitTravel = {DELAY_INIT_TRAVEL_ADDR, 0};
+MemoryController::MemoryController() {
     updateWeldingParametersFromEeprom();
 }
-template <class T>
-MemoryController<T>::~MemoryController() {
+
+MemoryController::~MemoryController() {
     // intentionally empty
 }
-template <class T>
-T MemoryController<T>::getValueFromAddress(T memoryAddres) {
-    T val = 0;
+
+int16_t MemoryController::getValueFromAddress(int16_t memoryAddres) {
+    int16_t val = 0;
     EEPROM.get(memoryAddres, val);
     return val;
 }
-template <class T>
-String MemoryController<T>::toString() {
+
+String MemoryController::toString() {
     String str;
     str += "ArcShortVol.: " + (String)getShortCircuitVoltage();
     str += "\nWeldVol.: " + (String)getWeldingVoltage();
@@ -33,30 +25,32 @@ String MemoryController<T>::toString() {
     str += "\nFeedSpeed.: " + (String)getFeedSpeed();
     return str;
 }
-template <class T>
-void MemoryController<T>::updateEepromFromWeldingParameters() {
-    EEPROM.put(ARC_CONTROLLER_GAIN_ADDR, WeldingParameters::arcControllerGain.value);
-    EEPROM.put(SHORT_CIRCUIT_VOLTAGE_ADDR, WeldingParameters::shortCircuitVoltage.value);
-    EEPROM.put(FEED_SPEED_ADDR, WeldingParameters::feedSpeed.value);
-    EEPROM.put(WELDING_VOLTAGE_ADDR, WeldingParameters::weldingVoltage.value);
-    EEPROM.put(VOLTAGE_TOLERANCE_ADDR, WeldingParameters::voltageTolerance.value);
-    EEPROM.put(TRAVEL_SPEED_ADDR, WeldingParameters::travelSpeed.value);
-    EEPROM.put(DELAY_INIT_TRAVEL_ADDR, WeldingParameters::delayInitTravel.value);
+
+void MemoryController::updateEepromFromWeldingParameters() {
+    Serial.print("WELDING_GAIN: ");
+    Serial.println(weldingParameters.arcControllerGain.value);
+    EEPROM.put(ARC_CONTROLLER_GAIN_ADDR, weldingParameters.arcControllerGain.value);
+    EEPROM.put(SHORT_CIRCUIT_VOLTAGE_ADDR, weldingParameters.shortCircuitVoltage.value);
+    EEPROM.put(FEED_SPEED_ADDR, weldingParameters.feedSpeed.value);
+    EEPROM.put(WELDING_VOLTAGE_ADDR, weldingParameters.weldingVoltage.value);
+    EEPROM.put(VOLTAGE_TOLERANCE_ADDR, weldingParameters.voltageTolerance.value);
+    EEPROM.put(TRAVEL_SPEED_ADDR, weldingParameters.travelSpeed.value);
+    EEPROM.put(DELAY_INIT_TRAVEL_ADDR, weldingParameters.delayInitTravel.value);
 }
-template <class T>
-void MemoryController<T>::updateWeldingParametersFromEeprom() {
-    T var;
+
+void MemoryController::updateWeldingParametersFromEeprom() {
+    int16_t var;
     EEPROM.get(ARC_CONTROLLER_GAIN_ADDR, var);
     setArcControllerGain(var);
-    EEPROM.get(SHORT_CIRCUIT_VOLTAGE_ADDR, WeldingParameters::shortCircuitVoltage.value);
-    EEPROM.get(FEED_SPEED_ADDR, WeldingParameters::feedSpeed.value);
-    EEPROM.get(WELDING_VOLTAGE_ADDR, WeldingParameters::weldingVoltage.value);
-    EEPROM.get(VOLTAGE_TOLERANCE_ADDR, WeldingParameters::voltageTolerance.value);
-    EEPROM.get(TRAVEL_SPEED_ADDR, WeldingParameters::travelSpeed.value);
-    EEPROM.get(DELAY_INIT_TRAVEL_ADDR, WeldingParameters::delayInitTravel.value);
+    EEPROM.get(SHORT_CIRCUIT_VOLTAGE_ADDR, weldingParameters.shortCircuitVoltage.value);
+    EEPROM.get(FEED_SPEED_ADDR, weldingParameters.feedSpeed.value);
+    EEPROM.get(WELDING_VOLTAGE_ADDR, weldingParameters.weldingVoltage.value);
+    EEPROM.get(VOLTAGE_TOLERANCE_ADDR, weldingParameters.voltageTolerance.value);
+    EEPROM.get(TRAVEL_SPEED_ADDR, weldingParameters.travelSpeed.value);
+    EEPROM.get(DELAY_INIT_TRAVEL_ADDR, weldingParameters.delayInitTravel.value);
 }
-template <class T>
-bool MemoryController<T>::verifyParameterValue(const int value)
+
+bool MemoryController::verifyParameterValue(const int value)
 {
     if (value != 0) return true;
     return false;

@@ -4,57 +4,55 @@
 #include <EEPROM.h>
 #include "MotorController.hpp"
 
-template <class T>
 class MemoryController
 {
 public:
     MemoryController();
     ~MemoryController();
-    T getShortCircuitVoltage() const {return WeldingParameters::shortCircuitVoltage.value;};
-    T getWeldingVoltage() const {return WeldingParameters::weldingVoltage.value;};
-    T getArcControllerGain() const {return WeldingParameters::arcControllerGain.value;};
-    T getVoltageTolerance() const {return WeldingParameters::voltageTolerance.value;};
-    T getDelayInitTravel() const {return WeldingParameters::delayInitTravel.value;};
-    T getTravelSpeed() const {return WeldingParameters::travelSpeed.value;};
-    T getFeedSpeed() const {return WeldingParameters::feedSpeed.value;};
-    T getValueFromAddress(T memoryAddres);
-
+    int16_t getShortCircuitVoltage() const {return weldingParameters.shortCircuitVoltage.value;};
+    int16_t getWeldingVoltage() const {return weldingParameters.weldingVoltage.value;};
+    int16_t getArcControllerGain() const {return weldingParameters.arcControllerGain.value;};
+    int16_t getVoltageTolerance() const {return weldingParameters.voltageTolerance.value;};
+    int16_t getDelayInitTravel() const {return weldingParameters.delayInitTravel.value;};
+    int16_t getTravelSpeed() const {return weldingParameters.travelSpeed.value;};
+    int16_t getFeedSpeed() const {return weldingParameters.feedSpeed.value;};
+    int16_t getValueFromAddress(int16_t memoryAddres);
     
-    void setShortCircuitVoltage(T val) {WeldingParameters::shortCircuitVoltage.value = val;};
-    void setWeldingVoltage(T val) {WeldingParameters::weldingVoltage.value = val;};
-    void setArcControllerGain(T val) {WeldingParameters::arcControllerGain.value  = val;};
-    void setVoltageTolerance(T val) {WeldingParameters::voltageTolerance.value = val;};
-    void setDelayInitTravel(T val) {WeldingParameters::delayInitTravel.value = val;};
-    void setTravelSpeed(T val) {WeldingParameters::travelSpeed.value  = val;};
-    void setFeedSpeed(T val) {WeldingParameters::feedSpeed.value  = val;};
+    void setShortCircuitVoltage(int16_t val) {weldingParameters.shortCircuitVoltage.value = val;};
+    void setWeldingVoltage(int16_t val) {weldingParameters.weldingVoltage.value = val;};
+    void setArcControllerGain(int16_t val) {weldingParameters.arcControllerGain.value  = val;};
+    void setVoltageTolerance(int16_t val) {weldingParameters.voltageTolerance.value = val;};
+    void setDelayInitTravel(int16_t val) {weldingParameters.delayInitTravel.value = val;};
+    void setTravelSpeed(int16_t val) {weldingParameters.travelSpeed.value  = val;};
+    void setFeedSpeed(int16_t val) {weldingParameters.feedSpeed.value  = val;};
     String toString();
     void updateWeldingParametersFromEeprom();
     void updateEepromFromWeldingParameters();
     bool verifyParameterValue(const int value);
 
     struct ParameterIdAndData {
-        T identifier;
-        T value;
+        int16_t identifier = 0;
+        int16_t value = 0;
     };
 
     struct WeldingParameters {
-        static ParameterIdAndData shortCircuitVoltage;
-        static ParameterIdAndData weldingVoltage;
-        static ParameterIdAndData arcControllerGain;
-        static ParameterIdAndData voltageTolerance;
-        static ParameterIdAndData delayInitTravel;
-        static ParameterIdAndData feedSpeed;
-        static ParameterIdAndData travelSpeed;
-    };
+        ParameterIdAndData shortCircuitVoltage;
+        ParameterIdAndData weldingVoltage;
+        ParameterIdAndData arcControllerGain;
+        ParameterIdAndData voltageTolerance;
+        ParameterIdAndData delayInitTravel;
+        ParameterIdAndData feedSpeed;
+        ParameterIdAndData travelSpeed;
+    }weldingParameters;
 
-    enum MemoryAddress : T {SHORT_CIRCUIT_VOLTAGE_ADDR=0,
-                WELDING_VOLTAGE_ADDR=sizeof(T),
-                ARC_CONTROLLER_GAIN_ADDR=sizeof(T)*2,
-                VOLTAGE_TOLERANCE_ADDR=sizeof(T)*3,
-                DELAY_INIT_TRAVEL_ADDR=sizeof(T)*4,
-                FEED_SPEED_ADDR=sizeof(T)*5,
-                TRAVEL_SPEED_ADDR=sizeof(T)*6,
+    enum MemoryAddress : int16_t {SHORT_CIRCUIT_VOLTAGE_ADDR=0,
+                WELDING_VOLTAGE_ADDR=sizeof(int16_t),
+                ARC_CONTROLLER_GAIN_ADDR=sizeof(int16_t)*2,
+                VOLTAGE_TOLERANCE_ADDR=sizeof(int16_t)*3,
+                DELAY_INIT_TRAVEL_ADDR=sizeof(int16_t)*4,
+                FEED_SPEED_ADDR=sizeof(int16_t)*5,
+                TRAVEL_SPEED_ADDR=sizeof(int16_t)*6,
                 LAST};
 };
-static MemoryController<int16_t> MEMORY_CONTROLLER;
+
 #endif // MEMORY_CONTROLLER_H

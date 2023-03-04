@@ -101,7 +101,7 @@ class DisplayController
         Button _button;
         Encoder _encoder;
         InputPins _input_pins;
-        MemoryController<int16_t> MEMORY_CONTROLLER;
+        MemoryController MEMORY_CONTROLLER;
 
         #define MES_INIT "Iniciar Processo" // 0
         #define MES_RETU "Retornar" // 1
@@ -144,7 +144,7 @@ class DisplayController
     public:
         DisplayController();
         DisplayController(const InputPins& in_pins);
-        DisplayController(MemoryController<int16_t> memoryController, const InputPins& in_pins);
+        DisplayController(MemoryController memoryController, const InputPins& in_pins);
         ~DisplayController();
         const int getCurrentWindow() {return currentWindow;}
         const bool getInitProcess() {return initProcess;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
