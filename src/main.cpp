@@ -1,216 +1,193 @@
-#define VERBOSE_ 1
-#include <Arduino.h>
-#include "MotorController.hpp"
-#include "DisplayController.hpp"
+#include "main.hpp"
+// TODO: extinguir arco antes do soltar o endswitch (colocar o endswitch mais para frente e acionar o fechamento do arco antes de releaseEndSwitch)
+// TODO: atualizar display quando enswitch for acionado
 
-/* ----- Driver Pins ----- */
-// azul = EN, verde = DIR, amarelo = STEP
-const int ENX = 23, DIRX = 25, STEPX = 5, ENZ = 29, DIRZ = 27, STEPZ = 6, ESX1 = 20, ESX2 = 21, ESZ1 = 19, ESZ2 = 18, OUTX = 33, OUTZ = 35;
-DriverPins driver_x_pins = {ESX1, ESX2, DIRX, ENX, STEPX, OUTX};
-DriverPins driver_z_pins = {ESZ1, ESZ2,  DIRZ, ENZ, STEPZ, OUTZ};
-
-/* ----- Display Pins ----- */
-const uint8_t display_rs = 13;
-const uint8_t display_en = 12;
-const uint8_t display_d4 = 11;
-const uint8_t display_d5 = 10;
-const uint8_t display_d6 = 9;
-const uint8_t display_d7 = 8;
-DisplayPins display_pins = {display_rs, display_en, display_d4, display_d5, display_d6, display_d7};
-
-/* ---- Input Pins ----- */
-const uint8_t button = 31;
-const uint8_t encoder_a = 3; //3;
-const uint8_t encoder_b = 2;// 25;
-InputPins input_pins = {button, encoder_a, encoder_b};
-
-/* ---- Driver Parameters ----- */
-const uint16_t driver_params = 8000; // 8000 pulses per revolution
-const uint8_t EIXO_X_ID = 3;
-const uint8_t EIXO_Z_ID = 4;
-const uint8_t EIXO_X_DIS = 34;
-const uint8_t EIXO_Z_DIS = 33;
-const uint8_t CORRECT_HEIGHT = 1;
+MemoryController<int16_t> MEMORY_CONTROLLER;
 MotorController eixo_x(driver_x_pins, driver_params, EIXO_X_ID, EIXO_X_DIS);
 MotorController eixo_z(driver_z_pins, driver_params, EIXO_Z_ID, EIXO_Z_DIS);
-DisplayController display(input_pins);
+DisplayController display(MEMORY_CONTROLLER, input_pins);
 
-bool isrx_home_flag = false;
-bool isrx_finish_flag = false;
-bool isrz_home_flag = false;
-bool isrz_finish_flag = false;
-bool isr_enc_flag = false;
+
 int16_t enc_count = 0;
-/* ----- ISRs ----- */
 
-void isr_encoder()
+ISR(TIMER5_COMPA_vect)
 {
-    // Serial.println("isr_encoder");
-    
-    isr_enc_flag = true;
+    eixo_z.toggleCorrectHeight();
 }
-
+ISR(TIMER5_COMPB_vect)
+{
+    display.monitorUserInput();
+}
 void setup ()
 {
     Serial.begin(9600);
+    MEMORY_CONTROLLER.updateWeldingParametersFromEeprom();
+    Serial.print("Memoria:\n");
+    Serial.println(MEMORY_CONTROLLER.toString());
+    // Serial.println(MemoryController<int>::)
 }
-
 void loop ()
 {
-    eixo_x.run();
-    if (eixo_x.get_close_arc()) eixo_z.close_arc();
-    eixo_z.run(true);
-    display.monitor_user_input();
-    // if (isr_enc_flag)
+    MotorController::run(eixo_x, eixo_z);
+    // eixo_x.run();
+    // if (eixo_x.getisArcOpen()) eixo_z.close_arc();
+    // eixo_z.run();
+    // if (isr_run_flag)
     // {
-        // Serial.println("Adjust Menu: "+String(display.get_adjust_menu()));
-        if (!display.get_adjust_menu())
+    //     eixo_x.run();
+    //     if (eixo_x.getisArcOpen()) eixo_z.close_arc();
+    //     eixo_z.run(true);
+    //     isr_run_flag = false;
+    // }
+    // if (isr_usr_inp)
+    // {
+    //     display.monitorUserInput();
+    //     isr_usr_inp_flag = false;
+    // }
+    if (!display.getAdjustMenu())
+    {
+        if (display.getEncoderMovementDirection() == 1) display.moveToNextWindow();
+        else if (display.getEncoderMovementDirection() == -1) display.moveToPreviousWindow();
+    }
+    else
+    {
+        enc_count = 0; // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
+        display.setEncoderCount(0); // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
+        switch (display.getCurrentWindow())
         {
-            if (display.get_enc_direction() == 1) display.next_window();
-            else if (display.get_enc_direction() == -1) display.previous_window();
-        }
-        else
-        {
-            switch (display.get_current_window())
-            {
-                case EDIT_POS_HORIZONTAL:
-                    eixo_x.set_speed(10);
-                    eixo_x.set_timer_speed();
-                    if (display.get_enc_direction() == 1) eixo_x.set_dir_state(FORWARD);
-                    else eixo_x.set_dir_state(BACKWARD);
-                    eixo_x.set_en_state(HIGH);
-                    display.set_menu_content(EDIT_POS_HORIZONTAL, eixo_x.get_speed());
-                    while (display.get_adjust_menu())
+            case EDIT_POS_HORIZONTAL:
+                // IMPROVEMENT: all the code inside this case could be a fuction that recives an axis parameter
+                eixo_x.setSpeed(0);
+                display.displayPrint(EDIT_POS_HORIZONTAL, eixo_x.getSpeed());
+                MotorController::setRunningProcess(MANUAL_POSITIONING);
+                while (display.getAdjustMenu())
+                {
+                    eixo_x.run();
+                    if (enc_count != display.getEncoderCount()) // IMPROVEMENT: after merging enc_count this condition must be redefined
                     {
-                        eixo_x.run();
-                        if (enc_count != display.get_enc_count() && eixo_x.get_en_state())
+                        if (display.getEncoderMovementDirection() == 1) eixo_x.setSpeed(eixo_x.getSpeed()+10);
+                        else eixo_x.setSpeed(eixo_x.getSpeed()-10);
+                        eixo_x.setProcess();
+                        if (eixo_x.getSpeed() == 0) eixo_x.setEnableMovement(LOW);
+                        else
                         {
-                            if (display.get_enc_direction() == 1)
-                            {
-                                eixo_x.set_speed(eixo_x.get_speed()+10);
-                            }
-                            else if(display.get_enc_direction() == -1)
-                            {
-                                eixo_x.set_speed(eixo_x.get_speed()-10);
-                                if (eixo_x.get_speed() < 0)
-                                {
-                                    eixo_x.set_speed(10);
-                                    eixo_x.set_dir_state(!eixo_x.get_dir_state());
-                                    eixo_x.set_timer_speed();
-                                }
-                                else
-                                {
-                                    eixo_x.set_en_state(LOW);
-                                    display.set_adjust_menu(false);
-                                    break;
-                                }
-                            }
-                            display.set_menu_content(EDIT_POS_HORIZONTAL, eixo_x.get_speed());
-                            enc_count = display.get_enc_count();
+                            if (eixo_x.getSpeed() > 0) eixo_x.setMovementDirection(FORWARD);
+                            else eixo_x.setMovementDirection(BACKWARD); 
+                            eixo_x.setEnableMovement(HIGH);
                         }
-                        display.monitor_user_input();
+                        display.displayPrint(EDIT_POS_HORIZONTAL, eixo_x.getSpeed());
+                        enc_count = display.getEncoderCount(); // IMPROVEMENT: after merging enc_count this line must be deleted
                     }
-                    break;
-                case EDIT_POS_VERTICAL:
-                    eixo_z.set_speed(10);
-                    eixo_z.set_timer_speed();
-                    if (display.get_enc_direction() == 1) eixo_z.set_dir_state(FORWARD);
-                    else eixo_z.set_dir_state(BACKWARD);
-                    eixo_z.set_en_state(HIGH);
-                    display.set_menu_content(EDIT_POS_VERTICAL, eixo_z.get_speed());
-                    while (display.get_adjust_menu())
+                    display.monitorUserInput();
+                }
+                eixo_x.setEnableMovement(LOW);
+                break;
+            case EDIT_POS_VERTICAL:
+                // IMPROVEMENT: all the code inside this case could be a fuction that recives an axis parameter
+                eixo_z.setSpeed(0);
+                display.displayPrint(EDIT_POS_VERTICAL, eixo_z.getSpeed());
+                MotorController::setRunningProcess(MANUAL_POSITIONING);
+                while (display.getAdjustMenu())
+                {
+                    eixo_z.run();
+                    if (enc_count != display.getEncoderCount()) // IMPROVEMENT: after merging enc_count this condition must be redefined
                     {
-                        eixo_z.run();
-                        if (enc_count != display.get_enc_count() && eixo_z.get_en_state())
+                        if (display.getEncoderMovementDirection() == 1) eixo_z.setSpeed(eixo_z.getSpeed()+10);
+                        else eixo_z.setSpeed(eixo_z.getSpeed()-10);
+                        eixo_z.setProcess();
+                        if (eixo_z.getSpeed() == 0) eixo_z.setEnableMovement(LOW);
+                        else
                         {
-                            if (display.get_enc_direction() == 1)
-                            {
-                                eixo_z.set_speed(eixo_z.get_speed()+10);
-                            }
-                            else if(display.get_enc_direction() == -1)
-                            {
-                                eixo_z.set_speed(eixo_z.get_speed()-10);
-                                if (eixo_z.get_speed() < 0)
-                                {
-                                    eixo_z.set_speed(10);
-                                    eixo_z.set_dir_state(!eixo_z.get_dir_state());
-                                    eixo_z.set_timer_speed();
-                                }
-                                else
-                                {
-                                    eixo_z.set_en_state(LOW);
-                                    display.set_adjust_menu(false);
-                                    break;
-                                }
-                            }
-                            display.set_menu_content(EDIT_POS_VERTICAL, eixo_z.get_speed());
-                            enc_count = display.get_enc_count();
+                            if (eixo_z.getSpeed() > 0) eixo_z.setMovementDirection(FORWARD);
+                            else eixo_z.setMovementDirection(BACKWARD); 
+                            eixo_z.setEnableMovement(HIGH);
                         }
-                        display.monitor_user_input();
+                        display.displayPrint(EDIT_POS_VERTICAL, eixo_z.getSpeed());
+                        enc_count = display.getEncoderCount(); // IMPROVEMENT: after merging enc_count this line must be deleted
                     }
-                    break;
-                default:
-                    while (display.get_adjust_menu())
+                }
+                eixo_z.setEnableMovement(LOW);
+                break;
+            default:
+                while (display.getAdjustMenu())
+                {
+                    if (display.getEncoderCount() != enc_count)
                     {
-                        if (display.get_enc_count() != enc_count)
+                        switch (display.getCurrentWindow())
                         {
-                            switch (display.get_current_window())
-                            {
-                                case EDIT_SPEED_FORW:
-                                    eixo_x.set_speed(eixo_x.get_speed() + display.get_enc_direction());
-                                    display.set_menu_content(EDIT_SPEED_FORW, eixo_x.get_speed());
-                                    break;
-                                case EDIT_SPEED_DIVE:
-                                    eixo_z.set_speed(eixo_z.get_speed() + display.get_enc_direction());
-                                    display.set_menu_content(EDIT_SPEED_DIVE, eixo_z.get_speed());
-                                    break;
-                                case EDIT_ARC_GAIN:
-                                    eixo_z.set_arc_controller_gain(eixo_z.get_arc_controller_gain()+display.get_enc_direction());
-                                    display.set_menu_content(EDIT_ARC_GAIN, eixo_z.get_arc_controller_gain());
-                                    break;
-                                case EDIT_ARC_SHORT_CIRCUIT_VOLTAGE:
-                                    eixo_z.set_arc_short_circuit_voltage(eixo_z.get_arc_short_circuit_voltage()+display.get_enc_direction());
-                                    display.update_display_dynamic(EDIT_ARC_SHORT_CIRCUIT_VOLTAGE, eixo_z.get_arc_short_circuit_voltage());
-                                    break;
-                                case EDIT_WELDING_VOLTAGE:
-                                    eixo_z.set_welding_voltage(eixo_z.get_welding_voltage() + display.get_enc_direction());
-                                    display.update_display_dynamic(EDIT_WELDING_VOLTAGE, eixo_z.get_welding_voltage());
-                                    break;
-                                case EDIT_VOLTAGE_TOLERANCE:
-                                    eixo_z.set_voltage_tolerance(eixo_z.get_voltage_tolerance() + display.get_enc_direction());
-                                    display.update_display_dynamic(EDIT_VOLTAGE_TOLERANCE, eixo_z.get_voltage_tolerance());
-                                    break;
-                                case EDIT_DELAY_INIT_FORWARD_MOVE:
-                                    eixo_x.set_delay_init_forward_move(eixo_x.get_delay_init_forward_move() + display.get_enc_direction());
-                                    display.update_display_dynamic(EDIT_DELAY_INIT_FORWARD_MOVE, eixo_x.get_delay_init_forward_move());
-                                    break;
-                                default:
-                                    break;
-                            }
-                            enc_count = display.get_enc_count();
+                            case EDIT_TRAVEL_SPEED:
+                                MEMORY_CONTROLLER.setTravelSpeed(MEMORY_CONTROLLER.getTravelSpeed() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
+                                display.displayPrint(EDIT_TRAVEL_SPEED, MEMORY_CONTROLLER.getTravelSpeed());
+                                eixo_x.setSpeed(MEMORY_CONTROLLER.getTravelSpeed());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                break;
+                            case EDIT_FEED_SPEED:
+                                MEMORY_CONTROLLER.setFeedSpeed(MEMORY_CONTROLLER.getFeedSpeed() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
+                                display.displayPrint(EDIT_FEED_SPEED, MEMORY_CONTROLLER.getFeedSpeed());
+                                eixo_z.setSpeed(MEMORY_CONTROLLER.getFeedSpeed());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                break;
+                            case EDIT_ARC_GAIN:
+                                MEMORY_CONTROLLER.setArcControllerGain(MEMORY_CONTROLLER.getArcControllerGain() + display.getEncoderMovementDirection());// IMPROVEMENT: this could be a method from memoria that recieves a int8_t
+                                display.displayPrint(EDIT_ARC_GAIN, MEMORY_CONTROLLER.getArcControllerGain());
+                                eixo_z.setarcControllerGain(MEMORY_CONTROLLER.getArcControllerGain());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                break;
+                            case EDIT_SHORT_CIRCUIT_VOLTAGE:
+                                MEMORY_CONTROLLER.setShortCircuitVoltage(MEMORY_CONTROLLER.getShortCircuitVoltage() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
+                                display.updateDisplay(EDIT_SHORT_CIRCUIT_VOLTAGE, MEMORY_CONTROLLER.getShortCircuitVoltage());
+                                eixo_z.setShortCircuitVoltage(MEMORY_CONTROLLER.getShortCircuitVoltage());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                break;
+                            case EDIT_WELDING_VOLTAGE:
+                                MEMORY_CONTROLLER.setWeldingVoltage(MEMORY_CONTROLLER.getWeldingVoltage() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
+                                display.updateDisplay(EDIT_WELDING_VOLTAGE, MEMORY_CONTROLLER.getWeldingVoltage()); // IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                eixo_z.setWeldingVoltage(MEMORY_CONTROLLER.getWeldingVoltage());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                break;
+                            case EDIT_VOLTAGE_TOLERANCE:
+                                MEMORY_CONTROLLER.setVoltageTolerance(MEMORY_CONTROLLER.getVoltageTolerance() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
+                                display.updateDisplay(EDIT_VOLTAGE_TOLERANCE, MEMORY_CONTROLLER.getVoltageTolerance()); // IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                eixo_z.setVoltageTolerance(MEMORY_CONTROLLER.getVoltageTolerance());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                break;
+                            case EDIT_DELAY_INIT_TRAVEL:
+                                MEMORY_CONTROLLER.setDelayInitTravel(MEMORY_CONTROLLER.getDelayInitTravel() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
+                                display.updateDisplay(EDIT_DELAY_INIT_TRAVEL, MEMORY_CONTROLLER.getDelayInitTravel()); // IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                eixo_z.setDelayInitTravel(MEMORY_CONTROLLER.getDelayInitTravel());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
+                                break;
+                            case SAVE_SETTINGS:
+                                MEMORY_CONTROLLER.updateEepromFromWeldingParameters();
+                                // EEPROM.put(MEMORY_ADDRESS.SHORT_CIRCUIT_VOLTAGE_ADDR, MEMORY_CONTROLLER.getShortCircuitVoltage());
+                                break;
+                            default:
+                                break;
                         }
-                        display.monitor_user_input();
+                        Serial.print("Memoria:\n\n");
+                        Serial.println(MEMORY_CONTROLLER.toString());
+                        enc_count = display.getEncoderCount();
+                        display.monitorUserInput();
                     }
-            }
+                }
         }
         enc_count = 0;
-        display.set_enc_count(0);
-        // isr_enc_flag = false;
-    // }
-    if (display.get_init_process())
-    {
-        display.countdown_window();
-        display.process_window();
-        eixo_z.start_process();
-        eixo_x.start_process();
-        display.set_init_process(false);
+        display.setEncoderCount(0);
     }
-    if (display.get_return_home())
+    if (display.getInitProcess())
     {
-        display.process_window();
-        eixo_x.return_home();
+        display.executeCountdownWindow();
+        display.executeProcessWindow();
+        eixo_z.startProcess();
+        eixo_x.startProcess();
+        display.setInitProcess(false);
+        MotorController::setRunningProcess(WELD);
+    }
+    if (display.getReturnHome())
+    {
+        display.executeProcessWindow();
+        eixo_x.returnHome();
         delay(200);
-        eixo_z.return_home();
-        display.set_return_home(false);
+        eixo_z.returnHome();
+        display.setReturnHome(false);
+        MotorController::setRunningProcess(RETURN);
+    }
+    if (!eixo_x.getEnableMovement() && !eixo_z.getEnableMovement() && MotorController::getRunningProcess() != IDDLE)
+    {
+        MotorController::setRunningProcess(IDDLE);
+        display.updateDisplay();
     }
 }

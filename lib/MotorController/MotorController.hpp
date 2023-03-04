@@ -2,14 +2,20 @@
 #define MOTORCONTROLLER_H
 
 #include <Arduino.h>
-
-// #include "Calculator.hpp"
 #include "Button.hpp"
 const uint8_t HOME = 0;
 const uint8_t FINISH = 1;
 const uint8_t FORWARD = 1;
 const uint8_t BACKWARD = 0;
 const uint8_t MIN_TIME = 30; // seconds // TODO: confirm this with CAD model
+const uint8_t IDDLE = 0;
+const uint8_t WELD = 1;
+const uint8_t RETURN = 2;
+const uint8_t MANUAL_POSITIONING = 3;
+// const double INP_VOLTAGE_TO_REAL_VOLTAGE_MULTIPLIER = 0.05865102639296188; 
+const double INP_VOLTAGE_TO_REAL_VOLTAGE_MULTIPLIER = 5./1023.; 
+// Microchip ATmega2560 DataSheet p.151 freq = clk_freq/(2 * PreScaler * TOP) clk_fre=16MHz PreScaler=64 TOP = OCR_Value // TODO fix this description since this formula is only the begining of the calculation
+const float STEP_GENERATOR_FREQ_MULTIPLIER = 0.041664; // TODO corrigir essa merda
 
 struct DriverPins
 {
@@ -20,68 +26,81 @@ struct DriverPins
     uint8_t _STEP;
     uint8_t _OUT;
 };
-// struct DriverParameters
-// {
-//     uint16_t _pulses_per_rev;
-// };
-// struct ProcessParameters
-// {
-//     uint8_t _last_pos;
-//     uint8_t _dir_state;
-//     uint8_t _en_state;
-//     long _frequency;
-//     uint64_t _num_pulses;
-//     float _distance; // cm
-//     float _time; // min
-//     float _speed; // cm/min
-//     // IMPROVEMENT uint8_t _dist_unit = 1; // cm
-//     // IMPROVEMENT uint8_t _time_unit = 1; // min
-// };
-
+ 
 class MotorController
 {
     private:
-        // IMPROVEMENT const char dist_unit[5] = { 'm', 'cm', 'mm', 'in', 'feet'};
-        // IMPROVEMENT const char time_unit[4] = {'m', 's', 'ms', 'us'};
-        uint8_t _last_pos;
-        uint8_t _dir_state;
-        uint8_t _en_state;
-        long _frequency; // Hz
-        uint64_t _num_pulses;
-        uint8_t _max_distance; // cm
-        uint8_t _distance; // cm
-        float _time; // min
-        uint8_t _speed; // cm/min
-        uint16_t _ocr; 
-        uint16_t _pulses_per_rev;
+        uint8_t lastPosition;
+        uint8_t movementDirection;
+        uint8_t enableMovement;
+        long stepFrequency; // Hz
+        uint64_t numberOfPulses;
+        uint8_t maxDistance; // cm
+        uint8_t distance; // cm
+        float processDuration; // min
+        int16_t speed; // cm/min
+        uint16_t ocr; 
+        uint16_t pulsesPerRevolution;
         uint8_t _id; // timer identifier
-        uint16_t _arc_voltage = 0;
-        uint16_t _last_arc_voltage;
-        uint8_t _arc_controller_gain = 0;
-        uint8_t _welding_voltage = 0;
-        uint8_t _short_circuit_voltage = 0;
-        uint8_t _voltage_tolerance = 0;
-        uint8_t _delay_init_forward_move = 0; // milliseconds
-        bool _close_arc = false;
+        uint8_t arcControllerGain = 0;
+        uint8_t weldingVoltage = 0;
+        uint8_t shortCircuitVoltage = 0;
+        uint8_t voltageTolerance = 0;
+        uint8_t delayInitTravel = 0; // milliseconds
+        bool isArcOpen = false;
+        bool isHeightControllerActive = false;
+        static uint8_t runningProcess;
 
         DriverPins _driver_pins;
         Button _end_switch1, _end_switch2;
-
-        void calc_freq();
-        void calc_freq(const int pot_val);
-        void calc_ocr();
-        void cartrige_return();
-        void correct_height();
-        void end_switch(bool activate_cartrige_return);
+        /**
+         * @brief 
+         * 
+         */
+        void calcFreq();
+        /**
+         * @brief 
+         * 
+         */
+        void calcOcr();
+        void releaseEndSwitch();
+        /**
+         * @brief 
+         * 
+         * @param releaseEndSwitch 
+         */
+        void processEndSwitch(bool releaseEndSwitch);
+        /**
+         * @brief 
+         * 
+         * @param pins 
+         */
         void io_setup(const DriverPins &pins);
-        double map(uint16_t val);
-        void open_arc();
-        void read_voltage();
-        void set_process();
-        void set_process(uint8_t mode);
-        void set_timers();
-        void stop_timers();
-        void verify_distance();
+        /**
+        * @brief Compute equivalent voltage based on analoread() value. Assuming input values 0-1023 and output 0-60V
+        * 
+        */
+        double readVoltage();
+        /**
+         * @brief Set the Timers attribute
+         * 
+         */
+        void setTimers();
+        /**
+         * @brief 
+         * 
+         */
+        void stopTimers();
+        /**
+         * @brief 
+         * 
+         */
+        void verifyDistance();
+        /**
+         * @brief 
+         * 
+         */
+        void saveParameters();
 
     public:
         MotorController();
@@ -89,49 +108,57 @@ class MotorController
         MotorController(const DriverPins &pins, const uint16_t &driver_pul_rev, const uint8_t &id, uint8_t dis);
         ~MotorController();
         
-        void set_distance(const uint8_t dist) {_distance = dist;};
-        void set_max_distance(const uint8_t dist) {_max_distance = dist;};
-        void set_time(const uint8_t time) {_time = time;};
-        void set_speed(const uint8_t speed) {_speed = speed;};
-        void set_ocr(const uint16_t ocr_top) {_ocr = ocr_top;};
-        void set_freq(const long freq) {_frequency = freq;}; // TODO: review usability
-        void set_num_pulses(const uint64_t num) {_num_pulses = num;}; // TODO: review usability
-        void set_last_pos(const uint8_t pos) {_last_pos = pos;};  // TODO: review usability
-        void set_pos(uint8_t pos) {set_last_pos(pos);}; // TODO: find better name for this function  // TODO: review usability
-        void set_arc_controller_gain(uint8_t gain) {_arc_controller_gain = gain;};
-        void set_welding_voltage(uint8_t voltage) {_welding_voltage = voltage;};
-        void set_arc_short_circuit_voltage(uint8_t voltage) {_short_circuit_voltage = voltage;};
-        void set_voltage_tolerance(uint8_t voltage) {_voltage_tolerance = voltage;};
-        void set_delay_init_forward_move(uint8_t ms) {_delay_init_forward_move = ms;};
-        void set_close_arc(bool val) {_close_arc = val;};
+        void setDistance(const uint8_t dist) {distance = dist;}
+        void setMaxDistance(const uint8_t dist) {maxDistance = dist;}
+        void setProcessDuration(const uint8_t time) {processDuration = time;}
+        void setSpeed(const int16_t newSpeed) {speed = newSpeed;}
+        void setOcr(const uint16_t ocr_top) {ocr = ocr_top;}
+        void setFreq(const long freq) {stepFrequency = freq;} // TODO: review usability
+        void setNumberOfPulses(const uint64_t num) {numberOfPulses = num;} // TODO: review usability
+        void setLastPosition(const uint8_t pos) {lastPosition = pos;}  // TODO: review usability
+        void set_pos(uint8_t pos) {setLastPosition(pos);} // TODO: find better name for this function  // TODO: review usability
+        void setarcControllerGain(uint8_t gain) {arcControllerGain = gain;}
+        void setWeldingVoltage(uint8_t voltage) {weldingVoltage = voltage;}
+        void setShortCircuitVoltage(uint8_t voltage) {shortCircuitVoltage = voltage;}
+        void setDelayInitTravel(uint8_t ms) {delayInitTravel = ms;}
+        void setIsArcOpen(bool val) {isArcOpen = val;}
+        static void setRunningProcess(uint8_t process);
+        void setVoltageTolerance(uint8_t voltage) {voltageTolerance = voltage;}
 
-        const uint8_t get_dir_state() {return _dir_state;};
-        const uint8_t get_en_state() {return _en_state;};
-        const long get_freq() {return _frequency;};
-        const uint8_t get_distance() {return _distance;};
-        const uint8_t get_max_distance() {return _max_distance;};
-        const uint8_t get_time() {return _time;};
-        const uint8_t get_speed() {return _speed;};
-        const uint16_t get_ocr() {return _ocr;};
-        const uint8_t get_pos() {return _last_pos;};
-        const uint8_t get_arc_controller_gain() {return _arc_controller_gain;};
-        const uint8_t get_welding_voltage() {return _welding_voltage;};
-        const uint8_t get_arc_short_circuit_voltage() {return _short_circuit_voltage;};
-        const uint8_t get_voltage_tolerance() {return _voltage_tolerance;};
-        const uint8_t get_delay_init_forward_move() {return _delay_init_forward_move;};
-        const bool get_close_arc() {return _close_arc;};
-
-        void close_arc();
-        void return_home();
-        void set_dir_state(const uint8_t state);
-        void set_en_state(const uint8_t  state);
-        void set_timer_speed();
-        void start_process();
-        void start_process(uint8_t mode);
+        const uint8_t getMovementDirection() {return movementDirection;}
+        const uint8_t getEnableMovement() {return enableMovement;}
+        const long get_freq() {return stepFrequency;}
+        const uint8_t getDistance() {return distance;}
+        const uint8_t getMaxDistance() {return maxDistance;}
+        const uint8_t getProcessDuration() {return processDuration;}
+        const int16_t getSpeed() {return speed;}
+        const uint16_t getOcr() {return ocr;}
+        const uint8_t getPos() {return lastPosition;}
+        const uint8_t getArcControllerGain() {return arcControllerGain;}
+        const uint8_t getWeldingVoltage() {return weldingVoltage;}
+        const uint8_t getShortCircuitVoltage() {return shortCircuitVoltage;}
+        const uint8_t getVoltageTolerance() {return voltageTolerance;}
+        const uint8_t getDelayInitTravel() {return delayInitTravel;}
+        const bool getIsArcOpen() {return isArcOpen;}
+        const static uint8_t getRunningProcess() {return runningProcess;};
+        /**
+         * @brief Ceases the arc by pully the z axxis upwards.
+         * 
+         */
+        void closeArc();
+        /**
+         * @brief Proportional controller that ajdusts arc lenght based on arc voltage. The error is calculated by converting the measured voltage (0-1023) to the equivalent arc voltage (assuming maximum arc voltage is 60V and it is equivalent to 5V, 60/1023=0.05865) minus the desired voltage. The error is then multiplied by the actual speed and the controller gain, if it overshoots the movementDirection is reversed.
+         */
+        void correctHeight();
+        void returnHome();
+        void setMovementDirection(const uint8_t state);
+        void setEnableMovement(const uint8_t  state);
+        void setProcess();
+        void startProcess();
+        void startProcess(uint8_t mode);
         void run();
         void run(bool activate_correct_height);
-        
-        // IMPROVEMENT void set_units(char* dist_unit, char* time_unit);
-    
+        static void run(MotorController& xAxis, MotorController& zAxis);
+        void toggleCorrectHeight() {isHeightControllerActive = !isHeightControllerActive;}
 };
 #endif // MOTORCONTROLLER_H
