@@ -21,7 +21,7 @@ DisplayController::DisplayController(const InputPins& in_pins) : _input_pins(in_
 {
     constructor();
 }
-DisplayController::DisplayController(MemoryController memoryController, const InputPins& in_pins): _input_pins(in_pins),  MEMORY_CONTROLLER(memoryController) {
+DisplayController::DisplayController(MemoryController& memoryController, const InputPins& in_pins): _input_pins(in_pins),  MEMORY_CONTROLLER(memoryController) {
     constructor();
 }
 DisplayController::~DisplayController()
@@ -29,6 +29,13 @@ DisplayController::~DisplayController()
     // intentionally empty
 }
 
+bool DisplayController::checkEncoderMovement() {
+    if (encoderCount != lastEncoderCount) {
+        lastEncoderCount = encoderCount;
+        return true;
+    }
+    return false;
+}
 void DisplayController::displayPrint(int content_descriptor, String content)
 {
     _lcd.setCursor(0,0);
@@ -90,6 +97,103 @@ void DisplayController::executeCountdownWindow()
         delay(1000);
     }
 }
+void DisplayController::executeButtonAction() {
+    switch (currentWindow)
+        {
+            case 0:
+                if (!getInitProcess()) setInitProcess(true);
+                else setInitProcess(false);
+                break;
+            case 1:
+                if (!getReturnHome()) setReturnHome(true);
+                else setReturnHome(false);
+                break;
+            case 2: case 3: case 30: case 31:
+                currentWindow *= 10;
+                break;
+            case 20: case 21:
+                if (!getAdjustMenu())
+                {
+                    currentWindow *= 10;
+                    setAdjustMenu(true);
+                }
+                break;
+            case EDIT_SHORT_CIRCUIT_VOLTAGE/10:
+                if (!getAdjustMenu())
+                {
+                    currentWindow *= 10;
+                    setAdjustMenu(true);
+                }
+                break;
+            case EDIT_WELDING_VOLTAGE/10:
+                if (!getAdjustMenu())
+                {
+                    currentWindow *= 10;
+                    setAdjustMenu(true);
+                    Serial.print("WeldingVoltage: ");
+                    Serial.println(MEMORY_CONTROLLER.getWeldingVoltage());
+                }
+                break;
+            case EDIT_VOLTAGE_TOLERANCE/10:
+                if (!getAdjustMenu())
+                {
+                    currentWindow *= 10;
+                    setAdjustMenu(true);
+                }
+                break;
+            case EDIT_ARC_GAIN/10:
+                if (!getAdjustMenu())
+                {
+                    currentWindow *= 10;
+                    setAdjustMenu(true);
+                }
+                break;
+            case EDIT_DELAY_INIT_TRAVEL/10:
+                if (!getAdjustMenu())
+                {
+                    currentWindow *= 10;
+                    setAdjustMenu(true);
+                }
+                break;
+            case EDIT_TRAVEL_SPEED/10:
+                if (!getAdjustMenu())
+                {
+                    currentWindow *= 10;
+                    setAdjustMenu(true);
+                }
+                break;
+            case EDIT_FEED_SPEED/10:
+                if (!getAdjustMenu())
+                {
+                    currentWindow *= 10;
+                    setAdjustMenu(true);
+                }
+                break;
+            case 22: case 305: case 312:
+                currentWindow /= 10;
+                break;
+            case SAVE_SETTINGS:
+                MEMORY_CONTROLLER.updateEepromFromWeldingParameters();currentWindow = 33;
+                // EEPROM.put(MEMORY_ADDRESS.SHORT_CIRCUIT_VOLTAGE_ADDR, MEMORY_CONTROLLER.getShortCircuitVoltage());
+                break;
+            default:
+                if (currentWindow == 200 ||
+                    currentWindow == 210 ||
+                    currentWindow >= 3000)
+                {
+                    currentWindow /= 10;
+                    setAdjustMenu(false);
+                    
+                }
+                else
+                {
+                    currentWindow = 0;
+                    
+                }
+                break;
+        }
+        updateDisplay();
+}
 void DisplayController::executeProcessWindow()
 {
     _lcd.clear();
@@ -107,14 +211,14 @@ void DisplayController::initializeDisplay()
 }
 void DisplayController::liveEditPosition(MotorController &axis) {
     axis.setSpeed(0);
-    display.displayPrint(EDIT_POS_HORIZONTAL, axis.getSpeed());
+    displayPrint(EDIT_POS_HORIZONTAL, axis.getSpeed());
     MotorController::setRunningProcess(MANUAL_POSITIONING);
-    while (display.getAdjustMenu())
+    while (getAdjustMenu())
     {
         axis.run();
-        if (enc_count != display.getEncoderCount()) // IMPROVEMENT: after merging enc_count this condition must be redefined
+        if (checkEncoderMovement())
         {
-            if (display.getEncoderMovementDirection() == 1) axis.setSpeed(axis.getSpeed()+10);
+            if (getEncoderMovementDirection() == 1) axis.setSpeed(axis.getSpeed()+10);
             else axis.setSpeed(axis.getSpeed()-10);
             axis.setProcess();
             if (axis.getSpeed() == 0) axis.setEnableMovement(LOW);
@@ -124,10 +228,10 @@ void DisplayController::liveEditPosition(MotorController &axis) {
                 else axis.setMovementDirection(BACKWARD); 
                 axis.setEnableMovement(HIGH);
             }
-            display.displayPrint(EDIT_POS_HORIZONTAL, axis.getSpeed());
-            enc_count = display.getEncoderCount(); // IMPROVEMENT: after merging enc_count this line must be deleted
+            displayPrint(EDIT_POS_HORIZONTAL, axis.getSpeed());
+            updateLastEncoderCount();
         }
-        display.monitorUserInput();
+        monitorUserInput();
     }
     axis.setEnableMovement(LOW);
 }
@@ -164,10 +268,10 @@ void DisplayController::moveToPreviousWindow()
     }
 }
 bool DisplayController::navigateThroughParallelWindows() {
-    if (!display.getAdjustMenu())
+    if (!getAdjustMenu())
     {
-        if (display.getEncoderMovementDirection() == 1) display.moveToNextWindow();
-        else if (display.getEncoderMovementDirection() == -1) display.moveToPreviousWindow();
+        if (getEncoderMovementDirection() == 1) moveToNextWindow();
+        else if (getEncoderMovementDirection() == -1) moveToPreviousWindow();
         return true;
     }
     return false;
@@ -176,112 +280,8 @@ void DisplayController::processButtonInput()
 {
     if (_button.debounce())
     {
-        switch (currentWindow)
-        {
-            case 0:
-                if (!getInitProcess()) setInitProcess(true);
-                else setInitProcess(false);
-                updateDisplay();
-                break;
-            case 1:
-                if (!getReturnHome()) setReturnHome(true);
-                else setReturnHome(false);
-                updateDisplay();
-                break;
-            case 2: case 3: case 30: case 31:
-                currentWindow *= 10;
-                updateDisplay();
-                break;
-            case 20: case 21:
-                if (!getAdjustMenu())
-                {
-                    currentWindow *= 10;
-                    setAdjustMenu(true);
-                    updateDisplay(currentWindow,"");
-                }
-                break;
-            case EDIT_SHORT_CIRCUIT_VOLTAGE/10:
-                if (!getAdjustMenu())
-                {
-                    currentWindow *= 10;
-                    setAdjustMenu(true);
-                    updateDisplay(currentWindow, MEMORY_CONTROLLER.getShortCircuitVoltage());
-                }
-                break;
-            case EDIT_WELDING_VOLTAGE/10:
-                if (!getAdjustMenu())
-                {
-                    currentWindow *= 10;
-                    setAdjustMenu(true);
-                    updateDisplay(currentWindow, MEMORY_CONTROLLER.getWeldingVoltage());
-                }
-                break;
-            case EDIT_VOLTAGE_TOLERANCE/10:
-                if (!getAdjustMenu())
-                {
-                    currentWindow *= 10;
-                    setAdjustMenu(true);
-                    updateDisplay(currentWindow, MEMORY_CONTROLLER.getVoltageTolerance());
-                }
-                break;
-            case EDIT_ARC_GAIN/10:
-                if (!getAdjustMenu())
-                {
-                    currentWindow *= 10;
-                    setAdjustMenu(true);
-                    updateDisplay(currentWindow, MEMORY_CONTROLLER.getArcControllerGain());
-                }
-                break;
-            case EDIT_DELAY_INIT_TRAVEL/10:
-                if (!getAdjustMenu())
-                {
-                    currentWindow *= 10;
-                    setAdjustMenu(true);
-                    updateDisplay(currentWindow, MEMORY_CONTROLLER.getDelayInitTravel());
-                }
-                break;
-            case EDIT_TRAVEL_SPEED/10:
-                if (!getAdjustMenu())
-                {
-                    currentWindow *= 10;
-                    setAdjustMenu(true);
-                    updateDisplay(currentWindow, MEMORY_CONTROLLER.getTravelSpeed());
-                }
-                break;
-            case EDIT_FEED_SPEED/10:
-                if (!getAdjustMenu())
-                {
-                    currentWindow *= 10;
-                    setAdjustMenu(true);
-                    updateDisplay(currentWindow, MEMORY_CONTROLLER.getFeedSpeed());
-                }
-                break;
-            case 22: case 305: case 312:
-                currentWindow /= 10;
-                updateDisplay();
-                break;
-            case SAVE_SETTINGS:
-                MEMORY_CONTROLLER.updateEepromFromWeldingParameters();
-                // EEPROM.put(MEMORY_ADDRESS.SHORT_CIRCUIT_VOLTAGE_ADDR, MEMORY_CONTROLLER.getShortCircuitVoltage());
-                break;
-            default:
-                if (currentWindow == 200 ||
-                    currentWindow == 210 ||
-                    currentWindow >= 3000)
-                {
-                    currentWindow /= 10;
-                    setAdjustMenu(false);
-                    updateDisplay();
-                }
-                else
-                {
-                    currentWindow = 0;
-                    updateDisplay();
-                }
-                break;
-        }
+        setButtonPressedFlag(true);
     }
-    delayMicroseconds(500);
 }
 void DisplayController::processEncoderInput()
 {
@@ -289,8 +289,20 @@ void DisplayController::processEncoderInput()
     encoderMovementDirection =_encoder.process();
     encoderCount += encoderMovementDirection;
 }
-void DisplayController::updateDisplay()
-{
+void DisplayController::resetEconderCount() {
+    encoderCount = 0;
+    lastEncoderCount = 0;
+}
+void DisplayController::run() {
+    if (buttonPressedFlag) {
+        executeButtonAction();
+        setButtonPressedFlag(false);
+        Serial.println("ButtonPressed!");
+    }
+    
+}
+void DisplayController::updateDisplay() {
+    _lcd.clear();
     switch (getCurrentWindow())
     {
         case 0:
@@ -348,7 +360,45 @@ void DisplayController::updateDisplay()
             displayPrint(MES_RETURN_PREVIOUS_MENU, MES_PRESS_CONFIRM);
             break;
         default:
-            displayPrint("Erro!", "Reinicie!");
+            switch (currentWindow) {
+                case EDIT_TRAVEL_SPEED:
+                    _lcd.setCursor(0,0);
+                    _lcd.print("Vel: ");
+                    _lcd.print(MEMORY_CONTROLLER.getTravelSpeed());
+                    _lcd.print(+"cm/min");
+                    break;
+                case EDIT_FEED_SPEED:
+                    _lcd.setCursor(0,0);
+                    _lcd.print("Vel: ");
+                    _lcd.print(MEMORY_CONTROLLER.getFeedSpeed());
+                    _lcd.print("cm/min");
+                    break;
+                case EDIT_VOLTAGE_TOLERANCE:
+                    _lcd.setCursor(0,0);
+                    _lcd.print(MEMORY_CONTROLLER.getVoltageTolerance());_lcd.print("V");
+                    break;
+                case EDIT_ARC_GAIN:
+                    _lcd.setCursor(0,0);
+                    _lcd.print("Ganho: "+MEMORY_CONTROLLER.getArcControllerGain());
+                    break;
+                case EDIT_SHORT_CIRCUIT_VOLTAGE:
+                    _lcd.setCursor(0,0);
+                    _lcd.print(MEMORY_CONTROLLER.getShortCircuitVoltage());_lcd.print(" V");
+                    break;
+                case EDIT_DELAY_INIT_TRAVEL:
+                    _lcd.setCursor(0,0);
+                    _lcd.print("Tempo: ");
+                    _lcd.print(MEMORY_CONTROLLER.getDelayInitTravel());
+                    _lcd.print(" ms");
+                    break;
+                case EDIT_WELDING_VOLTAGE:
+                    _lcd.setCursor(0,0);
+                    _lcd.print(MEMORY_CONTROLLER.getWeldingVoltage());_lcd.print(" V");
+                    break;
+                default:
+                displayPrint("Erro!", "Reinicie!");
+                    break;
+                }
             break;
     }
 }

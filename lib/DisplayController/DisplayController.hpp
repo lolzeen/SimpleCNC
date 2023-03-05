@@ -102,6 +102,7 @@ class DisplayController
         Encoder _encoder;
         InputPins _input_pins;
         MemoryController MEMORY_CONTROLLER;
+        volatile bool buttonPressedFlag = false;
 
         #define MES_INIT "Iniciar Processo" // 0
         #define MES_RETU "Retornar" // 1
@@ -133,6 +134,8 @@ class DisplayController
         int currentWindow = 0;
         volatile int8_t encoderMovementDirection;
         volatile int8_t encoderCount = 0;
+        volatile int8_t lastEncoderCount = 0;
+        uint64_t lastButtonPress = 0;
         // bool buttonState = false;
         bool adjustMenu = false;
         bool initProcess = false;
@@ -144,44 +147,51 @@ class DisplayController
     public:
         DisplayController();
         DisplayController(const InputPins& in_pins);
-        DisplayController(MemoryController memoryController, const InputPins& in_pins);
+        DisplayController(MemoryController& memoryController, const InputPins& in_pins);
         ~DisplayController();
         const int getCurrentWindow() {return currentWindow;}
         const bool getInitProcess() {return initProcess;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
         const bool getReturnHome() {return returnHome;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
         const bool getAdjustMenu() {return adjustMenu;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
+        bool getButtonPressedFlag() {return buttonPressedFlag;};
         const int8_t getEncoderMovementDirection() {return encoderMovementDirection;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 2)
         const int8_t getEncoderCount() {return encoderCount;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 2)
+        bool checkEncoderMovement();
         void displayPrint(const char* upper, const char* lower);
         void displayPrint(int menuWindowSpecifier, String content);
         void displayPrint(int menuWindowSpecifier, int content);
-        void liveEditPosition(MotorController &axis);
-        void setCurrentWindow(uint16_t new_window) {currentWindow = new_window;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
-        void setInitProcess(bool var) {initProcess = var;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
-        void setReturnHome(bool var) {returnHome = var;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
-        void setAdjustMenu(bool var) {adjustMenu = var;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
-        void setEncoderCount(int16_t num) {encoderCount = num;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
-        /**
-         * @brief If the button was pressed, performs an action acording to the current window.
-         * 
-         */
-        void processButtonInput(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 2)
         void executeCountdownWindow();// TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 1)
         void initializeDisplay();
-        void monitorUserInput() {processEncoderInput();processButtonInput();};// TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 2)
+        void liveEditPosition(MotorController &axis);
+        void monitorUserInput() {processEncoderInput();processButtonInput();}
         void moveToNextWindow();// TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 3) 
         void moveToInnerWindow(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 3) 
         void moveToPreviousWindow();// TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 3) 
         void moveToOuterWindow(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 3) 
         bool navigateThroughParallelWindows();
+        /**
+         * @brief If the button was pressed, performs an action acording to the current window.
+         * 
+         */
+        void processButtonInput(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 2)
+        void run();
+        void resetEconderCount();
+        void setButtonPressedFlag(bool newState) {buttonPressedFlag = newState;}
+        void setCurrentWindow(uint16_t new_window) {
+            currentWindow = new_window;
+        } // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
+        void setInitProcess(bool var) {initProcess = var;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
+        void setReturnHome(bool var) {returnHome = var;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
+        void setAdjustMenu(bool var) {adjustMenu = var;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
+        void setEncoderCount(int16_t num) {encoderCount = num;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
         void executeProcessWindow();// TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 1)
+        void executeButtonAction();
         void processEncoderInput(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 2)
         /**
          * @brief Update display with PREDEFINED information. Reads the data stored on the FLASH memory, if this data is not null print on the lcd display. If the data stored on the FLASH is null then searches the EPROM memory and print its content.
          * 
          */
         void updateDisplay();
-        void updateDisplay(int menuWindowSpecifier);
         /**
          * @brief Update display with ACQUIRED DATA information. Intended for all transitions that print acquired data.
          * 
@@ -196,6 +206,9 @@ class DisplayController
          * @param content 
          */
         void updateDisplay(int menuWindowSpecifier, uint8_t content);
+        void updateLastEncoderCount() {
+            lastEncoderCount = encoderCount;
+        }
         bool validateWindow(int id);
         bool verifyIfDataIsNull(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 5)
 };

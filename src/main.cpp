@@ -2,12 +2,12 @@
 // TODO: extinguir arco antes do soltar o endswitch (colocar o endswitch mais para frente e acionar o fechamento do arco antes de releaseEndSwitch)
 // TODO: atualizar display quando enswitch for acionado
 
-MemoryController MEMORY_CONTROLLER;
+static MemoryController MEMORY_CONTROLLER;
 MotorController eixo_x(driver_x_pins, driver_params, EIXO_X_ID, EIXO_X_DIS);
 MotorController eixo_z(driver_z_pins, driver_params, EIXO_Z_ID, EIXO_Z_DIS);
 DisplayController display(MEMORY_CONTROLLER, input_pins);
 
-int16_t enc_count = 0;
+int16_t testeWeldingVoltage = 0;
 
 ISR(TIMER5_COMPA_vect)
 {
@@ -16,6 +16,7 @@ ISR(TIMER5_COMPA_vect)
 ISR(TIMER5_COMPB_vect)
 {
     display.monitorUserInput();
+    
 }
 void setup ()
 {
@@ -28,10 +29,11 @@ void setup ()
 void loop ()
 {
     MotorController::run(eixo_x, eixo_z);
-    
+    display.run();
     if (!display.navigateThroughParallelWindows()) {
-        enc_count = 0; // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
-        display.setEncoderCount(0); // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
+        // enc_count = 0; // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
+        // display.setEncoderCount(0); // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
+        display.resetEconderCount();
         switch (display.getCurrentWindow())
         {
             case EDIT_POS_HORIZONTAL:
@@ -43,7 +45,7 @@ void loop ()
             default:
                 while (display.getAdjustMenu())
                 {
-                    if (display.getEncoderCount() != enc_count)
+                    if (display.checkEncoderMovement())
                     {
                         switch (display.getCurrentWindow())
                         {
@@ -69,6 +71,9 @@ void loop ()
                                 break;
                             case EDIT_WELDING_VOLTAGE:
                                 MEMORY_CONTROLLER.setWeldingVoltage(MEMORY_CONTROLLER.getWeldingVoltage() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
+                                testeWeldingVoltage = MEMORY_CONTROLLER.getWeldingVoltage();
+                                Serial.print("WeldingVoltage: ");
+                                Serial.println(testeWeldingVoltage);
                                 display.updateDisplay(EDIT_WELDING_VOLTAGE, MEMORY_CONTROLLER.getWeldingVoltage()); // IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
                                 eixo_z.setWeldingVoltage(MEMORY_CONTROLLER.getWeldingVoltage());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
                                 break;
@@ -87,13 +92,11 @@ void loop ()
                         }
                         Serial.print("Memoria:\n\n");
                         Serial.println(MEMORY_CONTROLLER.toString());
-                        enc_count = display.getEncoderCount();
-                        display.monitorUserInput();
+                        display.updateLastEncoderCount();
+                        display.run();
                     }
                 }
         }
-        enc_count = 0;
-        display.setEncoderCount(0);
     }
     if (display.getInitProcess())
     {

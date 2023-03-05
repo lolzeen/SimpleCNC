@@ -9,13 +9,13 @@ class MemoryController
 public:
     MemoryController();
     ~MemoryController();
-    int16_t getShortCircuitVoltage() const {return weldingParameters.shortCircuitVoltage.value;};
-    int16_t getWeldingVoltage() const {return weldingParameters.weldingVoltage.value;};
-    int16_t getArcControllerGain() const {return weldingParameters.arcControllerGain.value;};
-    int16_t getVoltageTolerance() const {return weldingParameters.voltageTolerance.value;};
-    int16_t getDelayInitTravel() const {return weldingParameters.delayInitTravel.value;};
-    int16_t getTravelSpeed() const {return weldingParameters.travelSpeed.value;};
-    int16_t getFeedSpeed() const {return weldingParameters.feedSpeed.value;};
+    int16_t getShortCircuitVoltage() {return weldingParameters.shortCircuitVoltage.value;};
+    int16_t getWeldingVoltage() {return weldingParameters.weldingVoltage.value;};
+    int16_t getArcControllerGain() {return weldingParameters.arcControllerGain.value;};
+    int16_t getVoltageTolerance() {return weldingParameters.voltageTolerance.value;};
+    int16_t getDelayInitTravel() {return weldingParameters.delayInitTravel.value;};
+    int16_t getTravelSpeed() {return weldingParameters.travelSpeed.value;};
+    int16_t getFeedSpeed() {return weldingParameters.feedSpeed.value;};
     int16_t getValueFromAddress(int16_t memoryAddres);
     
     void setShortCircuitVoltage(int16_t val) {weldingParameters.shortCircuitVoltage.value = val;};
@@ -43,7 +43,8 @@ public:
         ParameterIdAndData delayInitTravel;
         ParameterIdAndData feedSpeed;
         ParameterIdAndData travelSpeed;
-    }weldingParameters;
+    };
+
 
     enum MemoryAddress : int16_t {SHORT_CIRCUIT_VOLTAGE_ADDR=0,
                 WELDING_VOLTAGE_ADDR=sizeof(int16_t),
@@ -53,6 +54,8 @@ public:
                 FEED_SPEED_ADDR=sizeof(int16_t)*5,
                 TRAVEL_SPEED_ADDR=sizeof(int16_t)*6,
                 LAST};
+private:
+    WeldingParameters weldingParameters;
 };
 
 #endif // MEMORY_CONTROLLER_H
