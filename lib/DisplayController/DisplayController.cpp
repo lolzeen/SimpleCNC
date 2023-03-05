@@ -105,6 +105,32 @@ void DisplayController::initializeDisplay()
     setCurrentWindow(0);
     updateDisplay();
 }
+void DisplayController::liveEditPosition(MotorController &axis) {
+    axis.setSpeed(0);
+    display.displayPrint(EDIT_POS_HORIZONTAL, axis.getSpeed());
+    MotorController::setRunningProcess(MANUAL_POSITIONING);
+    while (display.getAdjustMenu())
+    {
+        axis.run();
+        if (enc_count != display.getEncoderCount()) // IMPROVEMENT: after merging enc_count this condition must be redefined
+        {
+            if (display.getEncoderMovementDirection() == 1) axis.setSpeed(axis.getSpeed()+10);
+            else axis.setSpeed(axis.getSpeed()-10);
+            axis.setProcess();
+            if (axis.getSpeed() == 0) axis.setEnableMovement(LOW);
+            else
+            {
+                if (axis.getSpeed() > 0) axis.setMovementDirection(FORWARD);
+                else axis.setMovementDirection(BACKWARD); 
+                axis.setEnableMovement(HIGH);
+            }
+            display.displayPrint(EDIT_POS_HORIZONTAL, axis.getSpeed());
+            enc_count = display.getEncoderCount(); // IMPROVEMENT: after merging enc_count this line must be deleted
+        }
+        display.monitorUserInput();
+    }
+    axis.setEnableMovement(LOW);
+}
 void DisplayController::moveToNextWindow()
 {
     if (validateWindow(currentWindow+1))
@@ -392,4 +418,3 @@ bool DisplayController::validateWindow(int id)
     // Serial.println("Invalid Window");
     return false;
 }
-

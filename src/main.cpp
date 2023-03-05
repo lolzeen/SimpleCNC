@@ -35,57 +35,10 @@ void loop ()
         switch (display.getCurrentWindow())
         {
             case EDIT_POS_HORIZONTAL:
-                // IMPROVEMENT: all the code inside this case could be a fuction that recives an axis parameter
-                eixo_x.setSpeed(0);
-                display.displayPrint(EDIT_POS_HORIZONTAL, eixo_x.getSpeed());
-                MotorController::setRunningProcess(MANUAL_POSITIONING);
-                while (display.getAdjustMenu())
-                {
-                    eixo_x.run();
-                    if (enc_count != display.getEncoderCount()) // IMPROVEMENT: after merging enc_count this condition must be redefined
-                    {
-                        if (display.getEncoderMovementDirection() == 1) eixo_x.setSpeed(eixo_x.getSpeed()+10);
-                        else eixo_x.setSpeed(eixo_x.getSpeed()-10);
-                        eixo_x.setProcess();
-                        if (eixo_x.getSpeed() == 0) eixo_x.setEnableMovement(LOW);
-                        else
-                        {
-                            if (eixo_x.getSpeed() > 0) eixo_x.setMovementDirection(FORWARD);
-                            else eixo_x.setMovementDirection(BACKWARD); 
-                            eixo_x.setEnableMovement(HIGH);
-                        }
-                        display.displayPrint(EDIT_POS_HORIZONTAL, eixo_x.getSpeed());
-                        enc_count = display.getEncoderCount(); // IMPROVEMENT: after merging enc_count this line must be deleted
-                    }
-                    display.monitorUserInput();
-                }
-                eixo_x.setEnableMovement(LOW);
+                display.liveEditPosition(eixo_x);                
                 break;
             case EDIT_POS_VERTICAL:
-                // IMPROVEMENT: all the code inside this case could be a fuction that recives an axis parameter
-                eixo_z.setSpeed(0);
-                display.displayPrint(EDIT_POS_VERTICAL, eixo_z.getSpeed());
-                MotorController::setRunningProcess(MANUAL_POSITIONING);
-                while (display.getAdjustMenu())
-                {
-                    eixo_z.run();
-                    if (enc_count != display.getEncoderCount()) // IMPROVEMENT: after merging enc_count this condition must be redefined
-                    {
-                        if (display.getEncoderMovementDirection() == 1) eixo_z.setSpeed(eixo_z.getSpeed()+10);
-                        else eixo_z.setSpeed(eixo_z.getSpeed()-10);
-                        eixo_z.setProcess();
-                        if (eixo_z.getSpeed() == 0) eixo_z.setEnableMovement(LOW);
-                        else
-                        {
-                            if (eixo_z.getSpeed() > 0) eixo_z.setMovementDirection(FORWARD);
-                            else eixo_z.setMovementDirection(BACKWARD); 
-                            eixo_z.setEnableMovement(HIGH);
-                        }
-                        display.displayPrint(EDIT_POS_VERTICAL, eixo_z.getSpeed());
-                        enc_count = display.getEncoderCount(); // IMPROVEMENT: after merging enc_count this line must be deleted
-                    }
-                }
-                eixo_z.setEnableMovement(LOW);
+                display.liveEditPosition(eixo_z);
                 break;
             default:
                 while (display.getAdjustMenu())

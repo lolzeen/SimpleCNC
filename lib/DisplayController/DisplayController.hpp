@@ -155,6 +155,7 @@ class DisplayController
         void displayPrint(const char* upper, const char* lower);
         void displayPrint(int menuWindowSpecifier, String content);
         void displayPrint(int menuWindowSpecifier, int content);
+        void liveEditPosition(MotorController &axis);
         void setCurrentWindow(uint16_t new_window) {currentWindow = new_window;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
         void setInitProcess(bool var) {initProcess = var;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
         void setReturnHome(bool var) {returnHome = var;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
