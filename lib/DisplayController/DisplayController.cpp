@@ -137,6 +137,15 @@ void DisplayController::moveToPreviousWindow()
         updateDisplay();
     }
 }
+bool DisplayController::navigateThroughParallelWindows() {
+    if (!display.getAdjustMenu())
+    {
+        if (display.getEncoderMovementDirection() == 1) display.moveToNextWindow();
+        else if (display.getEncoderMovementDirection() == -1) display.moveToPreviousWindow();
+        return true;
+    }
+    return false;
+}
 void DisplayController::processButtonInput()
 {
     if (_button.debounce())

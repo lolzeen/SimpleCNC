@@ -28,28 +28,8 @@ void setup ()
 void loop ()
 {
     MotorController::run(eixo_x, eixo_z);
-    // eixo_x.run();
-    // if (eixo_x.getisArcOpen()) eixo_z.close_arc();
-    // eixo_z.run();
-    // if (isr_run_flag)
-    // {
-    //     eixo_x.run();
-    //     if (eixo_x.getisArcOpen()) eixo_z.close_arc();
-    //     eixo_z.run(true);
-    //     isr_run_flag = false;
-    // }
-    // if (isr_usr_inp)
-    // {
-    //     display.monitorUserInput();
-    //     isr_usr_inp_flag = false;
-    // }
-    if (!display.getAdjustMenu())
-    {
-        if (display.getEncoderMovementDirection() == 1) display.moveToNextWindow();
-        else if (display.getEncoderMovementDirection() == -1) display.moveToPreviousWindow();
-    }
-    else
-    {
+    
+    if (!display.navigateThroughParallelWindows()) {
         enc_count = 0; // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
         display.setEncoderCount(0); // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
         switch (display.getCurrentWindow())

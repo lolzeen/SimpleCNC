@@ -172,6 +172,7 @@ class DisplayController
         void moveToInnerWindow(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 3) 
         void moveToPreviousWindow();// TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 3) 
         void moveToOuterWindow(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 3) 
+        bool navigateThroughParallelWindows();
         void executeProcessWindow();// TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 1)
         void processEncoderInput(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 2)
         /**
