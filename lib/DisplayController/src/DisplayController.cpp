@@ -15,7 +15,8 @@ void DisplayController::constructor() {
     interrupts();
     _button.begin(_input_pins.button, true);
     _encoder.begin(_input_pins.encoder_a, _input_pins.encoder_b);
-    initializeDisplay();
+    encoderCount = 0;
+    lastEncoderCount = 0;
 }
 DisplayController::DisplayController(const InputPins& in_pins) : _input_pins(in_pins)
 {
@@ -101,18 +102,18 @@ void DisplayController::executeCountdownWindow()
 void DisplayController::executeButtonAction() {
     switch (currentWindow)
         {
-            case 0:
+            case INIT_PROCESS:
                 if (!getInitProcess()) setInitProcess(true);
                 else setInitProcess(false);
                 break;
-            case 1:
+            case RETURN_PROCESS:
                 if (!getReturnHome()) setReturnHome(true);
                 else setReturnHome(false);
                 break;
-            case 2: case 3: case 30: case 31:
+            case EDIT_POS: case SYSTEM_CONFIG: case WELDING_PARAMETERS_CONFIG: case VELOCITY_PARAMETERS_CONFIG:
                 currentWindow *= 10;
                 break;
-            case 20: case 21:
+            case POS_HORIZONTAL: case POS_VERTICAL:
                 if (!getAdjustMenu())
                 {
                     currentWindow *= 10;
@@ -174,7 +175,9 @@ void DisplayController::executeButtonAction() {
                 currentWindow /= 10;
                 break;
             case SAVE_SETTINGS:
-                MEMORY_CONTROLLER.updateEepromFromWeldingParameters();currentWindow = 33;
+                MEMORY_CONTROLLER.updateEepromFromWeldingParameters();
+                delay(500);
+                currentWindow = 33;
                 // EEPROM.put(MEMORY_ADDRESS.SHORT_CIRCUIT_VOLTAGE_ADDR, MEMORY_CONTROLLER.getShortCircuitVoltage());
                 break;
             default:
@@ -184,16 +187,16 @@ void DisplayController::executeButtonAction() {
                 {
                     currentWindow /= 10;
                     setAdjustMenu(false);
-                    
                 }
                 else
                 {
                     currentWindow = 0;
-                    
                 }
                 break;
         }
+        Serial.println("Updated Display Because Of Button Press");
         updateDisplay();
+    
 }
 void DisplayController::executeProcessWindow()
 {
@@ -386,7 +389,7 @@ void DisplayController::updateDisplay() {
                     Serial.print("SHORT_CIRCUIT_VOLTAGE: ");
                     Serial.println(MEMORY_CONTROLLER.getShortCircuitVoltage());
                     _lcd.setCursor(0,0);
-                    _lcd.print(String(MEMORY_CONTROLLER.getShortCircuitVoltage()));
+                    _lcd.print(MEMORY_CONTROLLER.getShortCircuitVoltage());
                     _lcd.print(" V");
                     break;
                 case EDIT_DELAY_INIT_TRAVEL:

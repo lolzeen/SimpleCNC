@@ -31,26 +31,26 @@ String MemoryController<T>::toString() {
 
 template <typename T>
 void MemoryController<T>::updateEepromFromWeldingParameters() {
-    T temp = 0;
+    int temp = 0;
     temp = getArcControllerGain();
-    EEPROM.put(static_cast<int>(Address::ARC_CONTROLLER_GAIN_ADDR), temp);
+    EEPROM.put(static_cast<int>(Address::ARC_CONTROLLER_GAIN_ADDR), static_cast<int>(temp));
     temp = getShortCircuitVoltage();
-    EEPROM.put(static_cast<int>(Address::SHORT_CIRCUIT_VOLTAGE_ADDR), temp);
+    EEPROM.put(static_cast<int>(Address::SHORT_CIRCUIT_VOLTAGE_ADDR), static_cast<int>(temp));
     temp = getFeedSpeed();
-    EEPROM.put(static_cast<int>(Address::FEED_SPEED_ADDR), temp);
+    EEPROM.put(static_cast<int>(Address::FEED_SPEED_ADDR), static_cast<int>(temp));
     temp = getWeldingVoltage();
-    EEPROM.put(static_cast<int>(Address::WELDING_VOLTAGE_ADDR), temp);
+    EEPROM.put(static_cast<int>(Address::WELDING_VOLTAGE_ADDR), static_cast<int>(temp));
     temp = getVoltageTolerance();
-    EEPROM.put(static_cast<int>(Address::VOLTAGE_TOLERANCE_ADDR), temp);
+    EEPROM.put(static_cast<int>(Address::VOLTAGE_TOLERANCE_ADDR), static_cast<int>(temp));
     temp = getTravelSpeed();
-    EEPROM.put(static_cast<int>(Address::TRAVEL_SPEED_ADDR), temp);
+    EEPROM.put(static_cast<int>(Address::TRAVEL_SPEED_ADDR), static_cast<int>(temp));
     temp = getDelayInitTravel();
-    EEPROM.put(static_cast<int>(Address::DELAY_INIT_TRAVEL_ADDR), temp);
+    EEPROM.put(static_cast<int>(Address::DELAY_INIT_TRAVEL_ADDR), static_cast<int>(temp));
 }
 
 template <typename T>
 void MemoryController<T>::updateWeldingParametersFromEeprom() {
-    T temp = 0;
+    int temp = 0;
     EEPROM.get(static_cast<int>(Address::ARC_CONTROLLER_GAIN_ADDR), temp);
     setArcControllerGain(temp);
     EEPROM.get(static_cast<int>(Address::SHORT_CIRCUIT_VOLTAGE_ADDR), temp);
@@ -72,3 +72,5 @@ bool MemoryController<T>::verifyParameterValue(const T value)
 {
     return value != 0;
 }
+
+template class MemoryController<int>;

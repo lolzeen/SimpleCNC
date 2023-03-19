@@ -5,7 +5,7 @@
 MotorController eixo_x(driver_x_pins, driver_params, EIXO_X_ID, EIXO_X_DIS);
 MotorController eixo_z(driver_z_pins, driver_params, EIXO_Z_ID, EIXO_Z_DIS);
 // DisplayController display(MEMORY_CONTROLLER, input_pins);
-DisplayController display(input_pins);
+// DisplayController display(input_pins);
 
 ISR(TIMER5_COMPA_vect)
 {
@@ -17,6 +17,7 @@ ISR(TIMER5_COMPB_vect)
 }
 void setup ()
 {
+    display.setInputPins(input_pins);
     // static MemoryController<int> MEMORY_CONTROLLER;
     Serial.begin(9600);
     MEMORY_CONTROLLER.updateWeldingParametersFromEeprom();
@@ -28,7 +29,9 @@ void loop ()
 {
     MotorController::run(eixo_x, eixo_z);
     display.run();
+    // Serial.println("1");
     if (!display.navigateThroughParallelWindows()) {
+        Serial.println("2");
         // enc_count = 0; // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
         // display.setEncoderCount(0); // IMPROVEMENT: create a static variable in oder to merge enc_count and display.enc_count
         display.resetEconderCount();

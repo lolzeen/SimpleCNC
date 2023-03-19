@@ -6,7 +6,7 @@
 #include "Button.hpp"
 #include "Encoder.hpp"
 #include "MemoryController.hpp"
-extern MemoryController<int> MEMORY_CONTROLLER;
+// extern MemoryController<int> MEMORY_CONTROLLER;
 struct InputPins
 {
     InputPins()
@@ -60,21 +60,31 @@ struct DisplayPins
     uint8_t D6;
     uint8_t D7;
 };
-enum menuWindowSpecifier {EDIT_POS_HORIZONTAL=200,
+enum menuWindowSpecifier {
+                        INIT_PROCESS=0,
+                        RETURN_PROCESS=1,
+                        EDIT_POS=2,
+                        POS_HORIZONTAL=20,
+                        EDIT_POS_HORIZONTAL=200,
+                        POS_VERTICAL=21,
                         EDIT_POS_VERTICAL=210,
-                        EDIT_TRAVEL_SPEED=3100,
-                        EDIT_FEED_SPEED=3110,
-                        EDIT_VOLTAGE_TOLERANCE=3020, 
-                        EDIT_ARC_GAIN=3030,
+                        SYSTEM_CONFIG=3,
+                        WELDING_PARAMETERS_CONFIG=30,
+                        VELOCITY_PARAMETERS_CONFIG=31,   
+                        SAVE_SETTINGS=32,
                         EDIT_SHORT_CIRCUIT_VOLTAGE=3000,
                         EDIT_WELDING_VOLTAGE=3010,
+                        EDIT_VOLTAGE_TOLERANCE=3020, 
+                        EDIT_ARC_GAIN=3030,
                         EDIT_DELAY_INIT_TRAVEL=3040,
-                        SAVE_SETTINGS=32};
+                        EDIT_TRAVEL_SPEED=3100,
+                        EDIT_FEED_SPEED=3110
+                        };
 
 class DisplayController 
 {
     private:
-        const int valid_window_ids[32] = {0,1,2,3,20,21,22,200,210,30,31,32,33,300,3000,301,3010,302,3020,303,3030,304,3040,305,306,31,310,3100,311,3110,312,313};
+        const int valid_window_ids[32] = {INIT_PROCESS,RETURN_PROCESS,EDIT_POS,SYSTEM_CONFIG,POS_HORIZONTAL,POS_VERTICAL,22,200,210,30,31,32,33,300,3000,301,3010,302,3020,303,3030,304,3040,305,306,31,310,3100,311,3110,312,313};
         // delay before process start in seconds
         #ifndef PROCESS_START_DELAY
             #define PROCESS_START_DELAY 5
@@ -145,10 +155,9 @@ class DisplayController
         void constructor();
 
     public:
-        // MemoryController MEMORY_CONTROLLER;
         DisplayController();
         DisplayController(const InputPins& in_pins);
-        // DisplayController(MemoryController<int>& memoryController, const InputPins& in_pins);
+        // DisplayController(MemoryController<int>& _MEMORY_CONTROLLER, const InputPins& in_pins);
         ~DisplayController();
         const int getCurrentWindow() {return currentWindow;}
         const bool getInitProcess() {return initProcess;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
@@ -188,6 +197,10 @@ class DisplayController
         void executeProcessWindow();// TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 1)
         void executeButtonAction();
         void processEncoderInput(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 2)
+        void setInputPins(const InputPins& in_pins) {
+            _input_pins = in_pins;
+            constructor();
+        }
         /**
          * @brief Update display with PREDEFINED information. Reads the data stored on the FLASH memory, if this data is not null print on the lcd display. If the data stored on the FLASH is null then searches the EPROM memory and print its content.
          * 
@@ -213,4 +226,5 @@ class DisplayController
         bool validateWindow(int id);
         // bool verifyIfDataIsNull(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 5)
 };
+static DisplayController display;
 #endif // DISPLAYCONTROLLER_H
