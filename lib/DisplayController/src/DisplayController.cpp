@@ -21,9 +21,10 @@ DisplayController::DisplayController(const InputPins& in_pins) : _input_pins(in_
 {
     constructor();
 }
-DisplayController::DisplayController(MemoryController& memoryController, const InputPins& in_pins): _input_pins(in_pins),  MEMORY_CONTROLLER(memoryController) {
+/*
+DisplayController::DisplayController(MemoryController& newMemoryController, const InputPins& in_pins): _input_pins(in_pins) , MEMORY_CONTROLLER(newMemoryController){
     constructor();
-}
+}*/
 DisplayController::~DisplayController()
 {
     // intentionally empty
@@ -382,8 +383,11 @@ void DisplayController::updateDisplay() {
                     _lcd.print("Ganho: "+MEMORY_CONTROLLER.getArcControllerGain());
                     break;
                 case EDIT_SHORT_CIRCUIT_VOLTAGE:
+                    Serial.print("SHORT_CIRCUIT_VOLTAGE: ");
+                    Serial.println(MEMORY_CONTROLLER.getShortCircuitVoltage());
                     _lcd.setCursor(0,0);
-                    _lcd.print(MEMORY_CONTROLLER.getShortCircuitVoltage());_lcd.print(" V");
+                    _lcd.print(String(MEMORY_CONTROLLER.getShortCircuitVoltage()));
+                    _lcd.print(" V");
                     break;
                 case EDIT_DELAY_INIT_TRAVEL:
                     _lcd.setCursor(0,0);
@@ -450,7 +454,7 @@ void DisplayController::updateDisplay(int menuWindowSpecifier, String content)
     _lcd.print(MES_PRESS_CONFIRM);
     // Serial.println("Current. Window: "+String(currentWindow));
 }
-void DisplayController::updateDisplay(int menuWindowSpecifier,uint8_t content)
+void DisplayController::updateDisplay(int menuWindowSpecifier,int content)
 {
     updateDisplay(menuWindowSpecifier, String(content));
 }

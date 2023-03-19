@@ -2,12 +2,10 @@
 // TODO: extinguir arco antes do soltar o endswitch (colocar o endswitch mais para frente e acionar o fechamento do arco antes de releaseEndSwitch)
 // TODO: atualizar display quando enswitch for acionado
 
-static MemoryController MEMORY_CONTROLLER;
 MotorController eixo_x(driver_x_pins, driver_params, EIXO_X_ID, EIXO_X_DIS);
 MotorController eixo_z(driver_z_pins, driver_params, EIXO_Z_ID, EIXO_Z_DIS);
-DisplayController display(MEMORY_CONTROLLER, input_pins);
-
-int16_t testeWeldingVoltage = 0;
+// DisplayController display(MEMORY_CONTROLLER, input_pins);
+DisplayController display(input_pins);
 
 ISR(TIMER5_COMPA_vect)
 {
@@ -16,10 +14,10 @@ ISR(TIMER5_COMPA_vect)
 ISR(TIMER5_COMPB_vect)
 {
     display.monitorUserInput();
-    
 }
 void setup ()
 {
+    // static MemoryController<int> MEMORY_CONTROLLER;
     Serial.begin(9600);
     MEMORY_CONTROLLER.updateWeldingParametersFromEeprom();
     Serial.print("Memoria:\n");
@@ -66,14 +64,11 @@ void loop ()
                                 break;
                             case EDIT_SHORT_CIRCUIT_VOLTAGE:
                                 MEMORY_CONTROLLER.setShortCircuitVoltage(MEMORY_CONTROLLER.getShortCircuitVoltage() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
-                                display.updateDisplay(EDIT_SHORT_CIRCUIT_VOLTAGE, MEMORY_CONTROLLER.getShortCircuitVoltage());
+                                display.updateDisplay();
                                 eixo_z.setShortCircuitVoltage(MEMORY_CONTROLLER.getShortCircuitVoltage());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
                                 break;
                             case EDIT_WELDING_VOLTAGE:
                                 MEMORY_CONTROLLER.setWeldingVoltage(MEMORY_CONTROLLER.getWeldingVoltage() + display.getEncoderMovementDirection()); // IMPROVEMENT: this could be a method from memoria that recieves a int8_t
-                                testeWeldingVoltage = MEMORY_CONTROLLER.getWeldingVoltage();
-                                Serial.print("WeldingVoltage: ");
-                                Serial.println(testeWeldingVoltage);
                                 display.updateDisplay(EDIT_WELDING_VOLTAGE, MEMORY_CONTROLLER.getWeldingVoltage()); // IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
                                 eixo_z.setWeldingVoltage(MEMORY_CONTROLLER.getWeldingVoltage());// IMPROVEMENT: EIXO_X should have a access to memoria so the data is not saved two times
                                 break;
@@ -92,6 +87,7 @@ void loop ()
                         }
                         Serial.print("Memoria:\n\n");
                         Serial.println(MEMORY_CONTROLLER.toString());
+                        // EEPROM.put(MEMORY_CONTROLLER.ARC_CONTROLLER_GAIN_ADDR, MEMORY_CONTROLLER.getArcControllerGain());
                         display.updateLastEncoderCount();
                         display.run();
                     }

@@ -5,7 +5,6 @@
 #include "MotorController.hpp"
 #include "MemoryController.hpp"
 #include "DisplayController.hpp"
-#include <EEPROM.h>
 /* ----- Driver Pins ----- */
 // azul = EN, verde = DIR, amarelo = STEP
 const int ENX = 23,

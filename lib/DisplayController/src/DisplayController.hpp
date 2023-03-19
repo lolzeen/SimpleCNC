@@ -6,7 +6,7 @@
 #include "Button.hpp"
 #include "Encoder.hpp"
 #include "MemoryController.hpp"
-
+extern MemoryController<int> MEMORY_CONTROLLER;
 struct InputPins
 {
     InputPins()
@@ -101,8 +101,8 @@ class DisplayController
         Button _button;
         Encoder _encoder;
         InputPins _input_pins;
-        MemoryController MEMORY_CONTROLLER;
         volatile bool buttonPressedFlag = false;
+        
 
         #define MES_INIT "Iniciar Processo" // 0
         #define MES_RETU "Retornar" // 1
@@ -141,13 +141,14 @@ class DisplayController
         bool initProcess = false;
         bool returnHome = false;
         bool enableMonitorUserInput = false;
-
+        
         void constructor();
 
     public:
+        // MemoryController MEMORY_CONTROLLER;
         DisplayController();
         DisplayController(const InputPins& in_pins);
-        DisplayController(MemoryController& memoryController, const InputPins& in_pins);
+        // DisplayController(MemoryController<int>& memoryController, const InputPins& in_pins);
         ~DisplayController();
         const int getCurrentWindow() {return currentWindow;}
         const bool getInitProcess() {return initProcess;} // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 4)
@@ -205,11 +206,11 @@ class DisplayController
          * @param menuWindowSpecifier 
          * @param content 
          */
-        void updateDisplay(int menuWindowSpecifier, uint8_t content);
+        void updateDisplay(int menuWindowSpecifier, int16_t content);
         void updateLastEncoderCount() {
             lastEncoderCount = encoderCount;
         }
         bool validateWindow(int id);
-        bool verifyIfDataIsNull(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 5)
+        // bool verifyIfDataIsNull(); // TODO: REDUCE RESPONSIBILITY this should be in a different class (Classe 5)
 };
 #endif // DISPLAYCONTROLLER_H
